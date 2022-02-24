@@ -6,6 +6,8 @@
 // @author       You
 // @match        https://web.whatsapp.com/
 // @icon         https://www.google.com/s2/favicons?domain=whatsapp.com
+// @downloadURL https://raw.githubusercontent.com/melnic/siplus/master/Siplus000.js
+// @updateURL https://raw.githubusercontent.com/melnic/siplus/master/Siplus000.js
 // @grant        none
 // ==/UserScript==
 
