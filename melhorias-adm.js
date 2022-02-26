@@ -2,7 +2,7 @@
 // @name         Siplus - ação
 // @namespace    http://tampermonkey.net/
 // @version      0.1
-// @description  Exibi número da atividade no Siplan e facilita processo de cópia colocando no ClipBoard
+// @description  Exibi número da atividade no Sistema e facilita processo de cópia colocando no ClipBoard
 // @author       You
 // @match        http://webapps.sorocaba.sescsp.org.br/siplan/*
 // @grant        non
