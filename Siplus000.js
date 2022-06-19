@@ -60,15 +60,25 @@ function newChatWithNumberNotSaved() {
             if (e.keyCode == 13) {
                 const reg = /^\d+$/;
                 const r = /5?5?(\d+)/;
+                //const s = /D/;
+                const s = /[\d+]/;
 
-                var telefone = newChatInput.value;
-                telefone = telefone.match(r)[1];
-                //console.log(telefone);
+               var telefone = newChatInput.value;
+                //telefone = telefone.match(r)[1];
+                if (telefone.match(r)[1].length >= 30){
+                    telefone = telefone.match(r)[1];
+                    console.log(telefone + "Match de link");
+                }else{
+                    //telefone = telefone.match(s);
+                    console.log(telefone + "Match de padrao de telefone");
+                }
+
+                console.log(telefone);
 
                 //newChatInput.value(newChatInput.value.replace(/ /g, ""));
 
                 //if ((newChatInput.value.length >= 9) && (telefone.test(reg))) {
-                if (newChatInput.value.length >= 9) {
+                if (telefone.length >= 9) {
 
                     let link = document.createElement("a");
 
