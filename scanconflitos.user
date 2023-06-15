@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Scan Conflitos Espaços
 // @namespace    http://tampermonkey.net/
-// @version      23.6.14
+// @version      23.6.15
 // @description  Verificar Conflitos
 // @author       You
 // @match        http://webapps.sorocaba.sescsp.org.br/siplan/*
@@ -14,6 +14,7 @@
 // ==/UserScript==
 
 //Inserir Funções para acionar quando carregar itens
+//Versão Atualizada
 
 var resposta = '';
 
