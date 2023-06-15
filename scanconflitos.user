@@ -5,6 +5,8 @@
 // @description  Verificar Conflitos
 // @author       You
 // @match        http://webapps.sorocaba.sescsp.org.br/siplan/*
+// @updateURL    https://raw.githubusercontent.com/melnic/siplus/master/scanconflitos.user
+// @downloadURL  https://raw.githubusercontent.com/melnic/siplus/master/scanconflitos.user
 // @grant        none
 // @require     https://gist.github.com/raw/2625891/waitForKeyElements.js
 // @require      https://raw.githubusercontent.com/jeresig/jquery.hotkeys/master/jquery.hotkeys.js
