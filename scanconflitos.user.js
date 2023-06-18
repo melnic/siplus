@@ -1,253 +1,186 @@
 // ==UserScript==
-// @name         Gerador de Carta Proposta
+// @name         Scan Conflitos Espaços
 // @namespace    http://tampermonkey.net/
-// @version      23.6.17
-// @description  Obtem dados para carta proposta e lança no clipboard
+// @version      23.6.14
+// @description  Verificar Conflitos
 // @author       You
 // @match        http://webapps.sorocaba.sescsp.org.br/siplan/*
 // @grant        none
-// @require     https://gist.github.com/raw/2625891/waitForKeyElements.js
+// @require      https://gist.github.com/raw/2625891/waitForKeyElements.js
 // @require      https://raw.githubusercontent.com/jeresig/jquery.hotkeys/master/jquery.hotkeys.js
 // @grant       GM_addStyle
 // ==/UserScript==
 
-waitForKeyElements ("#btn-export", inserirBotao);
+//Inserir Funções para acionar quando carregar itens
 
-function inserirBotao(){
-    var d = $('#btn-export').parent();
-    d.append('<button class="btn" id="btn-carta" role="button" data-toggle="modal">Carta Proposta</button>');
-    $("#btn-carta").click(function(){
-        vai();
-    });
-}
-
-var adress = window.location.href;
-var patt = /96\d{12}/i;
-var n_acao = patt.exec(adress);
-var link_acao = "http://webapps.sorocaba.sescsp.org.br/siplan/api/atividade/" + n_acao;
 var resposta = '';
-const template_link = "ms-word:nft|u|https://sescsp.sharepoint.com/sites/NcleoArtstico-SescSorocaba/Shared%20Documents/Adm%20Programa%C3%A7%C3%A3o/Cartas%20Proposta/teste%20-%20CP%20-%20Universal%20Macro.dotm";
 
-//Monitorar requisições JSON
-// Filtrar solicitações com base na URL
-// Endereço de calendário /siplan/api/atividade?start=08%2F05%2F2023&end=15%2F05%2F2023
-// URL de ação /siplan/api/atividade/96000309122407?
+//waitForKeyElements (".fc-event", alert('Div de evento detectado'));
 
 var open = XMLHttpRequest.prototype.open;
-//alert('função foi injetada');
+var acoes_div = $('');
+var dados = [];
+
+const intervaloMinimo = 60; //em minutos
+var data = "09/05/2023 08:00";
+var resultado = [];
+var conflitos = [];
+var acoes_local = [];
+var locais_usados = [];
+const css_conflitos = '.intervaloCurto { border-left: 3px solid #e6ff00 !important; margin-left:-3px !important} .conflito {border-left: 3px solid #ff2859 !important; margin-left:-3px !important}';
+
 XMLHttpRequest.prototype.open = function(method, url, async) {
     //alert(url);
-    if (url.indexOf('api/atividade/96') !== -1) {
-        //alert('Solicitação interceptada:', method, url);
-
-        // Adicionar observador de eventos para a resposta
+    if (url.indexOf('api/atividade?start=') !== -1) {
         this.addEventListener('load', function() {
             resposta = this.responseText;
+            //alert('GET de datas identificado');
+
+            scanConflitos(resposta);
         });
     }
+    //
     open.apply(this, arguments);
 };
 
+// RETOMAR A PARTIR DAQUI
 
-//Função para obter dados de Ações
-var getJSON = function(url, callback) {
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', url, true);
-    xhr.responseType = 'json';
-    xhr.onload = function() {
-        var status = xhr.status;
-        if (status === 200) {
-            callback(null, xhr.response);
-        } else {
-            callback(status, xhr.response);
-        }
-    };
-    xhr.send();
-};
+function scanConflitos(d){
+    //alert('Scan Conflitos');
+    dados = JSON.parse(d);
 
-//Como utilizar a função getJSON: Funcional CTRL + I Busca dados da ação
-$(document).bind('keydown', 'ctrl+i', function(event){
-    //this.value = this.value.replace('$', 'EUR');
-    event.preventDefault();
-    event.stopPropagation();
+    //JSON.parse(resposta);  Transforma texto em objeto JSON
+    acoes_div = $('.fc-event');
+    //var
+    const intervaloMinimo = 60; //em minutos
+    var data = "09/05/2023 08:00";
+    var resultado = [];
+    var conflitos = [];
+    var acoes_local = [];
+    var locais_usados = [];
 
-    obterDadosCP(JSON.parse(resposta));
+    //Inserir tabela de estilo para conflitos no DOM
+    var style = document.createElement('style');
+    style.type = 'text/css';
+    style.innerHTML = css_conflitos;
+    document.getElementsByTagName('head')[0].appendChild(style);
 
-});
+    let e = filtrarDuplicatas(dados);  //Filtra dados duplicados no JSON recebido
+    e.forEach(inserirElemento);        //Vincula divs ao Json com dados das ações, para posterior alteração de estilo
 
-function vai(){
-    obterDadosCP(JSON.parse(resposta));
+    scanAcoes(e); //verifica conflitos de data e horário
 }
 
-function obterDadosCP(acao){
-    const r = /(Com )(.*?)[.,]/i;
-    const s = /Com ((Cia.?)?.+?)[,.]/ig;
+function filtrarDuplicatas(d){
+	let remover_acoes = [];
+	let e = d; //copia dos dados
 
-    var dados_cartas = [];
-    var titulo = acao.nome;
-    var datas = gerar_texto_datas(acao.datas);
-    var texto_parcelas = gerar_texto_contratos(acao)[0]; //Criar rotina para verificar todos os contrato, loop em Array, propriedades nome: parcelas: total:
+	for (let i = 0; i < d.length; i++){
+	    if (typeof d[i + 1] !== 'undefined'){
+	        for (var j = i + 1; j < d.length; j++){
+	            if (d[i].id == d[j].id){
+	                remover_acoes.push(j);
+	            }
+	        }
+	    }
+	}
 
-    var total = texto_parcelas.total;
-    var parcelas = texto_parcelas.parcelas;
-    var contratado = texto_parcelas.nome;
-    //var contratado = s.exec(acao.complemento)[1]; teste para retirar nome das ciass
+	for (let i = 0; i < remover_acoes.length; i++){
+	    e.splice(remover_acoes[i] - i,1);
+	}
 
-    //var contratado = '';
-    //texto_parcelas.nome !== null ? contratado = texto_parcelas.nome : acao.nome.match(r)[2];
+	return e
 
-    //alert(['titulo=' + titulo, 'contratado=' + contratado, 'datas=' + datas, 'total=' + total, 'parcelas=' + parcelas]);
-
-    divDadosCarta(['titulo=' + titulo, 'contratado=' + contratado, 'datas=' + datas, 'total=' + total, 'parcelas=' + parcelas]);
 }
 
-function toReais(numero){
-    let r = /(\d.*)(\d\d\d)\.?(\d*)?$/i;
-    console.log(r.exec(numero));
-    let x = r.exec(numero);
-    let milhar = r.exec(numero)[1];
-    let centena = r.exec(numero)[2];
-    let centavos = r.exec(numero)[3];
-    let n  = milhar + '.' + centena;
-    if (centavos) {
-        if (centavos < 9){
-            centavos += '0';
-        }
-        n += ',' + centavos;
+function inserirElemento(item, index, arr){
+    item['div'] = acoes_div[index];
+    item['inicio'] = converterParaData(item.start);
+    item['fim'] = converterParaData(item.end);
+}
+
+function scanAcoes(d){
+  let locais_usados = []; //ver se melhor ser variável global
+  d.forEach(function(entry){
+    if (locais_usados.indexOf(entry.local) == -1){
+      locais_usados.push(entry.local);
     }
-    let t = 'R$ ' + n;
-    return t
+	});
+
+  	let acoes_local = []; //ver se global é melhor
+	locais_usados.forEach(function(entry){
+		//acoes_local = dados.filter(function(entry2){
+        acoes_local = dados.filter(function(entry2){
+			return entry2.local == entry;
+		});
+		scanDatas(acoes_local);
+	});
+
+  function scanDatas(place){
+  	for (var i = 0; i < place.length; i++){
+  		if (typeof place[i + 1] !== 'undefined'){
+  			var acao = place[i];
+  			for (var j = i + 1; j < place.length; j++){
+  				var comparada = place[j];
+
+				//Verificar se ações não tem mesmo ID
+				if (acao.id != comparada.id){
+                    let z = acao.div.offsetWidth - 3;
+	  				let res = verificarConflito(acao, comparada);
+	  				if(res.conflito){
+	  					resultado.push([acao, comparada, 'conflito']);
+                        //acao.div.Css
+                        acao.div.classList.add("conflito");
+                        //acao.div.style.width= z + 'px';
+                        //alert(acao.div);
+                        comparada.div.classList.add("conflito");
+                        //comparada.div.style.width= z + 'px';
+                        //usar propriedade offsetWidth
+	  				};
+	                //if(res.intervaloCurto && !res.conflito){
+                    if(!res.conflito){
+                        if(res.intervaloCurto){
+                            resultado.push([acao, comparada, 'intervaloCurto']);
+                            //acao.div.Css
+                            acao.div.classList.add("intervaloCurto");
+                            //acao.div.style.width= z + 'px';
+                            //alert(acao.div);
+                            comparada.div.classList.add("intervaloCurto");
+                            //comparada.div.style.width= z + 'px';
+                            //usar propriedade offsetWidth
+                        };
+                    }
+				}
+  			}
+  		}
+  	}
+  }
 }
 
-function gerar_texto_contratos(acao){
-
-    var contratos = acao.servicos.filter(function(item){
-        //return item.areaNome == "Administrativo"
-        return item.itemDescricao.toLowerCase().includes("contrato");
-    });
-
-    var texto = '';
-
-    var retorno = [];
-
-    contratos.forEach(contrato => {
-        //console.log(contrato.custo);
-        //console.log(contrato.descricao);
-        //console.log(contrato.observacao);
-        let n = 1;
-        let texto_parcelas = '';
-        let contratado = contrato.descricao == null ? 'Nulo' : contrato.descricao;
-        //alert(contrato.parcelas);
-
-        if (contrato.parcelas != null){
-        contrato.parcelas.forEach(parcela => {
-            texto_parcelas += 'parcela ' + n + ', no valor de ' + toReais(parcela.valor) + ', a ser paga em ';
-            texto_parcelas += parcela.dataPrevista + '; ';
-            n++;
-        })
-        }else{
-            //contrato.parcelas == null ? texto_parcelas = contrato.custo : null;
-            //texto_parcelas = contrato.custo;
-            texto_parcelas = "";
-        }
-        //alert(texto_parcelas);
-        //alert(contrato.descricao);
-        //alert(contrato.custo);
-        retorno.push({'contratado':contrato.descricao,'total':toReais(contrato.custo), 'parcelas': texto_parcelas});
-        //alert(retorno[0]);
-    })
-
-    return retorno
+function converterParaData(data){
+    let dateParts = data.split(" ");
+    let date = dateParts[0].split("/");
+    let time = dateParts[1].split(":");
+    let year = parseInt(date[2]);
+    let month = parseInt(date[1]) - 1;
+    let day = parseInt(date[0]);
+    let hour = parseInt(time[0]);
+    let minute = parseInt(time[1]);
+    return new Date(year, month, day, hour, minute);
 }
 
-function gerar_texto_datas(datas){
-    //Chamar função gerar_texto_datas(dados.datas);
-    //var texto = 'no(s) dia(s): ';
-    var texto = '';
-    var ano = '';
+function verificarConflito(data1, data2) {
+  const inicio1 = data1.inicio;
+  const fim1 = data1.fim;
+  const inicio2 = data2.inicio;
+  const fim2 = data2.fim;
 
-    //Obtem dia e mês via regex
-    const r_dia_mes = /0?(\d{1,2})\/0?(\d{1,2})\/20(\d{1,2})/i;
-    //const r_dia_mes = /0?(\d{1,2})\/0?(\d{1,2}))/i;
-    const r_hora = /\d\d.\d\d$/i;
-    const r = /; $/; //identifica sobras de carater no final
+  const diffMs = Math.abs(fim1 - inicio2);
+  const diffHrs = diffMs / (1000 * 60 * intervaloMinimo); //Define hora como parêmetro
 
-    var z = {}; //guarda dados sobre datas para gerar texto
+  if (inicio1 < fim2 && inicio2 < fim1) {
+    return { conflito: true, intervaloCurto: diffHrs < 1 };
+  }
 
-    datas.forEach(data => {
-        let mes = r_dia_mes.exec(data.dataAgenda.dataInicio)[2];
-        let dia = r_dia_mes.exec(data.dataAgenda.dataInicio)[1];
-        ano = r_dia_mes.exec(data.dataAgenda.dataInicio)[3]; // teste de var ano
-        let hora_inicio = r_hora.exec(data.dataAgenda.dataInicio);
-        let hora_fim = r_hora.exec(data.dataAgenda.dataFim);
-        let horario = 'das ' + hora_inicio + ' às ' + hora_fim;
-
-        if (z[horario] == null){
-            z[horario] = {};
-        }
-
-        if (z[horario][mes] == null){
-            z[horario][mes] = [];
-        }
-
-        z[horario][mes].push(dia);
-
-    })
-
-    for (let horario in z){
-        //texto += horario;
-        for (let mes in z[horario]){
-            //texto += mes;
-            //texto += z[horario][mes].join(', ') + '/' + mes + '/' + ano + ', ';
-            texto += z[horario][mes].join(', ') + '/' + mes + ', ';
-        }
-        texto += horario + '; ';
-    }
-
-    texto = texto.replace(r, '');
-
-    //adiciona o ano no final das datas
-    //const x = /, (\d+\/\d+)(, das .{1,20}\.$)/;
-    //texto = texto.replace(x, ' e $1/23$2');
-    const x = /(, das .{1,22}$)/;
-    texto = texto.replace(x, '/23$1');
-
-    return texto
-}
-
-function divDadosCarta (dados_cp) {
-    'use strict';
-    //Insere DIV com dados obtidos para criar Carta Proposta
-
-    let textos_cp = dados_cp.join('|');
-
-    // Inserir Dados da ação em input
-    var n = document.getElementById("link-anexos");
-
-    //cria parágrafo para armazenar dados da carta
-
-    //Rotina para não inserir mais um div com infos
-    if (document.getElementById("dados_carta") == null){
-        var ativ = document.createElement("p");
-        ativ.innerHTML = '<input type="text" value="' + textos_cp + '" id="dados_carta" style="border:0px;font-size:10px;margin-left:-.5em;">';
-        var myInput = document.getElementById("dados_carta");
-        //n.insertBefore(ativ, n.firstChild);
-        n.appendChild(ativ);
-    }else{
-        ativ = document.getElementById('dados_carta');
-        ativ.value = textos_cp;
-    }
-
-    //Função de copiar para ClipBoard
-    ativ.addEventListener('click', function() {
-        //Copy text from input field to clipboard
-        var copyText = document.getElementById("dados_carta");
-        copyText.select();
-        document.execCommand("copy");
-    }, false);
-
-
-    ativ.click();
-    document.activeElement.blur();
-    window.open(template_link);
+  return { conflito: false, intervaloCurto: diffHrs < 1 };
 }
