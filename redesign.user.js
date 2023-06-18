@@ -8,8 +8,8 @@
 // @require      https://gist.github.com/raw/2625891/waitForKeyElements.js
 // @require      https://raw.githubusercontent.com/jeresig/jquery.hotkeys/master/jquery.hotkeys.js
 // @require      https://js.jotform.com/JotForm.js
-// @downloadURL 
-// @updateURL 
+// @downloadURL https://github.com/melnic/siplus/raw/master/redesign.user.js
+// @updateURL https://github.com/melnic/siplus/raw/master/redesign.user.js
 // @grant        GM_addStyle
 
 // @match        http://webapps.sorocaba.sescsp.org.br/*
