@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Redesign Sistemas Sesc
 // @namespace    http://tampermonkey.net/
-// @version      23.6.17
+// @version      23.6.18
 // @description  try to take over the world!
 // @author       You
 // @require      http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js
@@ -42,8 +42,6 @@
         jNode.hide();
     }
 
-    JF.initialize( {apiKey: "305576062b46c14eb42b92e29e910e3e"} );
-    //alert('formulários iniciados');
-    
+    alert('Teste de versão ok');    
 })();
 
