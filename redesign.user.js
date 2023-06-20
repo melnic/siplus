@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Redesign Sistemas Sesc
 // @namespace    http://tampermonkey.net/
-// @version      23.6.18
+// @version      23.6.20
 // @description  try to take over the world!
 // @author       You
 // @require      http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js
@@ -42,6 +42,6 @@
         jNode.hide();
     }
 
-    alert('Teste de versão ok');    
+    alert('Teste de versão ok, versão 2');    
 })();
 
