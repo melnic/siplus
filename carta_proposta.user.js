@@ -1,13 +1,15 @@
 // ==UserScript==
 // @name         Gerador de Carta Proposta
 // @namespace    http://tampermonkey.net/
-// @version      23.6.17
+// @version      23.6.22
 // @description  Obtem dados para carta proposta e lança no clipboard
 // @author       You
 // @match        http://webapps.sorocaba.sescsp.org.br/siplan/*
 // @grant        none
 // @require     https://gist.github.com/raw/2625891/waitForKeyElements.js
 // @require      https://raw.githubusercontent.com/jeresig/jquery.hotkeys/master/jquery.hotkeys.js
+// @downloadURL https://github.com/melnic/siplus/raw/master/carta_proposta.user.js
+// @updateURL https://github.com/melnic/siplus/raw/master/carta_proposta.user.js
 // @grant       GM_addStyle
 // ==/UserScript==
 
