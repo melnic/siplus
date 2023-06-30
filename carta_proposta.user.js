@@ -1,17 +1,22 @@
 // ==UserScript==
 // @name         Gerador de Carta Proposta
 // @namespace    http://tampermonkey.net/
-// @version      23.6.22
+// @version      23.6.28
 // @description  Obtem dados para carta proposta e lança no clipboard
 // @author       You
 // @match        http://webapps.sorocaba.sescsp.org.br/siplan/*
 // @grant        none
 // @require     https://gist.github.com/raw/2625891/waitForKeyElements.js
-// @require      https://raw.githubusercontent.com/jeresig/jquery.hotkeys/master/jquery.hotkeys.js
+// @require     https://raw.githubusercontent.com/jeresig/jquery.hotkeys/master/jquery.hotkeys.js
 // @downloadURL https://github.com/melnic/siplus/raw/master/carta_proposta.user.js
-// @updateURL https://github.com/melnic/siplus/raw/master/carta_proposta.user.js
+// @updateURL   https://github.com/melnic/siplus/raw/master/carta_proposta.user.js
 // @grant       GM_addStyle
 // ==/UserScript==
+
+
+// MELHORIAS E FUNCIONALIDADES
+// Insere máscara de reais corrigida em ação
+// Insere parcelamento de valores
 
 waitForKeyElements ("#btn-export", inserirBotao);
 
@@ -103,23 +108,27 @@ function obterDadosCP(acao){
     divDadosCarta(['titulo=' + titulo, 'contratado=' + contratado, 'datas=' + datas, 'total=' + total, 'parcelas=' + parcelas]);
 }
 
-function toReais(numero){
-    let r = /(\d.*)(\d\d\d)\.?(\d*)?$/i;
-    console.log(r.exec(numero));
-    let x = r.exec(numero);
-    let milhar = r.exec(numero)[1];
-    let centena = r.exec(numero)[2];
-    let centavos = r.exec(numero)[3];
-    let n  = milhar + '.' + centena;
-    if (centavos) {
-        if (centavos < 9){
-            centavos += '0';
-        }
-        n += ',' + centavos;
+function toReais(numero) {
+    // Converte o número para string e remove caracteres indesejados
+    var numeroString = numero.toString().replace(/\D/g, '');
+  
+    // Verifica se o número é válido
+    if (isNaN(numeroString)) {
+      return 'Número inválido';
     }
-    let t = 'R$ ' + n;
-    return t
-}
+  
+    // Adiciona o separador de milhar
+    numeroString = numeroString.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  
+    // Formata a parte decimal
+    var partes = numeroString.split('.');
+    var reais = partes[0];
+    var centavos = partes.length > 1 ? partes[1] : '00';
+    centavos = centavos.padEnd(2, '0');
+  
+    // Retorna o número formatado em reais
+    return 'R$ ' + reais + ',' + centavos;
+  }
 
 function gerar_texto_contratos(acao){
 
