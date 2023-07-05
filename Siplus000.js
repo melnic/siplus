@@ -1,7 +1,7 @@
 // ==UserScript==
-// @name         Siplus Dois Patinhos
+// @name         Zap Tool
 // @namespace    http://tampermonkey.net/
-// @version      0.1
+// @version      23.7.5
 // @description  try to take over the world!
 // @author       You
 // @match        https://web.whatsapp.com/
@@ -53,32 +53,29 @@ function newChatWithNumberNotSaved() {
         newChatInput.setAttribute("aria-label", phrases.LABEL_NEW_CHAT_INPUT);
         newChatInput.setAttribute("placeholder", phrases.PLACEHOLDER_NEW_CHAT_INPUT);
         newChatInput.setAttribute("autocomplete", "off");
-        let newChatInputStyle = "background-color: #90ee90;width:100%;text-align:center;font-size:1.5em";
+        let newChatInputStyle = "background-color: #EEE;width:100%;text-align:center;font-size:1.5em; border:none";
 
         newChatInput.setAttribute("style", newChatInputStyle);
         newChatInput.addEventListener("keydown", function (e) {
             if (e.keyCode == 13) {
                 const reg = /^\d+$/;
                 const r = /5?5?(\d+)/;
-                //const s = /D/;
-                const s = /[\d+]/;
+                const r2 = /\d+/g;
 
-               var telefone = newChatInput.value;
-                //telefone = telefone.match(r)[1];
-                if (telefone.match(r)[1].length >= 30){
-                    telefone = telefone.match(r)[1];
-                    console.log(telefone + "Match de link");
+                var telefone = newChatInput.value;
+
+                if (telefone.match(r)[1].length < 15){
+                    telefone = telefone.replace(/\D/g,'');
                 }else{
-                    //telefone = telefone.match(s);
-                    console.log(telefone + "Match de padrao de telefone");
+                    telefone = telefone.match(r)[1];
                 }
 
-                console.log(telefone);
+                //console.log(telefone);
 
                 //newChatInput.value(newChatInput.value.replace(/ /g, ""));
 
                 //if ((newChatInput.value.length >= 9) && (telefone.test(reg))) {
-                if (telefone.length >= 9) {
+                if (newChatInput.value.length >= 9) {
 
                     let link = document.createElement("a");
 
