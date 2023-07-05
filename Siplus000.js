@@ -2,7 +2,7 @@
 // @name         Zap Tool
 // @namespace    http://tampermonkey.net/
 // @version      23.7.5
-// @description  try to take over the world!
+// @description  adiciona funcionalidades práticas ao Zap
 // @author       You
 // @match        https://web.whatsapp.com/
 // @icon         https://www.google.com/s2/favicons?domain=whatsapp.com
