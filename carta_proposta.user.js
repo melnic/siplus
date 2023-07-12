@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gerador de Carta Proposta
 // @namespace    http://tampermonkey.net/
-// @version      23.6.28
+// @version      23.7.12
 // @description  Obtem dados para carta proposta e lança no clipboard
 // @author       You
 // @match        http://webapps.sorocaba.sescsp.org.br/siplan/*
@@ -15,18 +15,12 @@
 
 
 // MELHORIAS E FUNCIONALIDADES
+// 20/6/23
 // Insere máscara de reais corrigida em ação
 // Insere parcelamento de valores
+// 12/7 Retira dados de Licença de Exibição >>> Falta ajustar word
 
 waitForKeyElements ("#btn-export", inserirBotao);
-
-function inserirBotao(){
-    var d = $('#btn-export').parent();
-    d.append('<button class="btn" id="btn-carta" role="button" data-toggle="modal">Carta Proposta</button>');
-    $("#btn-carta").click(function(){
-        vai();
-    });
-}
 
 var adress = window.location.href;
 var patt = /96\d{12}/i;
@@ -45,7 +39,7 @@ var open = XMLHttpRequest.prototype.open;
 XMLHttpRequest.prototype.open = function(method, url, async) {
     //alert(url);
     if (url.indexOf('api/atividade/96') !== -1) {
-        //alert('Solicitação interceptada:', method, url);
+        //alert('Solicitação obtida:', method, url);
 
         // Adicionar observador de eventos para a resposta
         this.addEventListener('load', function() {
@@ -54,7 +48,6 @@ XMLHttpRequest.prototype.open = function(method, url, async) {
     }
     open.apply(this, arguments);
 };
-
 
 //Função para obter dados de Ações
 var getJSON = function(url, callback) {
@@ -74,7 +67,7 @@ var getJSON = function(url, callback) {
 
 //Como utilizar a função getJSON: Funcional CTRL + I Busca dados da ação
 $(document).bind('keydown', 'ctrl+i', function(event){
-    //this.value = this.value.replace('$', 'EUR');
+
     event.preventDefault();
     event.stopPropagation();
 
@@ -86,26 +79,36 @@ function vai(){
     obterDadosCP(JSON.parse(resposta));
 }
 
+// Ajustar função para alimentar dados gerais da ação
+// talvez criar objeto carta, com propriedades: titulo, complemento, datas_texto, contratos: array, ...
 function obterDadosCP(acao){
     const r = /(Com )(.*?)[.,]/i;
     const s = /Com ((Cia.?)?.+?)[,.]/ig;
 
-    var dados_cartas = [];
+    //var dados_cartas = [];
     var titulo = acao.nome;
     var datas = gerar_texto_datas(acao.datas);
-    var texto_parcelas = gerar_texto_contratos(acao)[0]; //Criar rotina para verificar todos os contrato, loop em Array, propriedades nome: parcelas: total:
+
+    //  Criar rotina para verificar todos os contrato, loop em Array, propriedades nome: parcelas: total:
+    var texto_parcelas = gerar_texto_contratos(acao)[0]; 
 
     var total = texto_parcelas.total;
     var parcelas = texto_parcelas.parcelas;
     var contratado = texto_parcelas.nome;
-    //var contratado = s.exec(acao.complemento)[1]; teste para retirar nome das ciass
-
-    //var contratado = '';
-    //texto_parcelas.nome !== null ? contratado = texto_parcelas.nome : acao.nome.match(r)[2];
-
-    //alert(['titulo=' + titulo, 'contratado=' + contratado, 'datas=' + datas, 'total=' + total, 'parcelas=' + parcelas]);
 
     divDadosCarta(['titulo=' + titulo, 'contratado=' + contratado, 'datas=' + datas, 'total=' + total, 'parcelas=' + parcelas]);
+}
+
+// Ajustar função para lidar com listagem de objetos de contratos
+// Usar estrutura do botão <button type="button" class="btn" data-toggle="dropdown">
+
+function inserirBotao(){
+    var d = $('#btn-export').parent();
+    d.append('<button class="btn" id="btn-carta" role="button" data-toggle="modal">Carta Proposta</button>');
+    $("#btn-carta").click(function(){
+        //Alterar função para alimentar variáveis gerais da ação
+        vai();
+    });
 }
 
 function toReais(numero) {
@@ -130,11 +133,11 @@ function toReais(numero) {
     return 'R$ ' + reais + ',' + centavos;
   }
 
+// Retorna listagem de objetos
 function gerar_texto_contratos(acao){
 
     var contratos = acao.servicos.filter(function(item){
-        //return item.areaNome == "Administrativo"
-        return item.itemDescricao.toLowerCase().includes("contrato");
+        return item.itemDescricao.toLowerCase().includes("contrato") || item.itemDescricao.toLowerCase().includes("licença"); 
     });
 
     var texto = '';
@@ -142,13 +145,10 @@ function gerar_texto_contratos(acao){
     var retorno = [];
 
     contratos.forEach(contrato => {
-        //console.log(contrato.custo);
-        //console.log(contrato.descricao);
-        //console.log(contrato.observacao);
+
         let n = 1;
         let texto_parcelas = '';
         let contratado = contrato.descricao == null ? 'Nulo' : contrato.descricao;
-        //alert(contrato.parcelas);
 
         if (contrato.parcelas != null){
         contrato.parcelas.forEach(parcela => {
@@ -157,29 +157,20 @@ function gerar_texto_contratos(acao){
             n++;
         })
         }else{
-            //contrato.parcelas == null ? texto_parcelas = contrato.custo : null;
-            //texto_parcelas = contrato.custo;
             texto_parcelas = "";
         }
-        //alert(texto_parcelas);
-        //alert(contrato.descricao);
-        //alert(contrato.custo);
         retorno.push({'contratado':contrato.descricao,'total':toReais(contrato.custo), 'parcelas': texto_parcelas});
-        //alert(retorno[0]);
     })
 
     return retorno
 }
 
 function gerar_texto_datas(datas){
-    //Chamar função gerar_texto_datas(dados.datas);
-    //var texto = 'no(s) dia(s): ';
     var texto = '';
     var ano = '';
 
     //Obtem dia e mês via regex
     const r_dia_mes = /0?(\d{1,2})\/0?(\d{1,2})\/20(\d{1,2})/i;
-    //const r_dia_mes = /0?(\d{1,2})\/0?(\d{1,2}))/i;
     const r_hora = /\d\d.\d\d$/i;
     const r = /; $/; //identifica sobras de carater no final
 
@@ -206,10 +197,7 @@ function gerar_texto_datas(datas){
     })
 
     for (let horario in z){
-        //texto += horario;
         for (let mes in z[horario]){
-            //texto += mes;
-            //texto += z[horario][mes].join(', ') + '/' + mes + '/' + ano + ', ';
             texto += z[horario][mes].join(', ') + '/' + mes + ', ';
         }
         texto += horario + '; ';
@@ -217,18 +205,15 @@ function gerar_texto_datas(datas){
 
     texto = texto.replace(r, '');
 
-    //adiciona o ano no final das datas
-    //const x = /, (\d+\/\d+)(, das .{1,20}\.$)/;
-    //texto = texto.replace(x, ' e $1/23$2');
     const x = /(, das .{1,22}$)/;
     texto = texto.replace(x, '/23$1');
 
     return texto
 }
 
+//Insere DIV com dados obtidos para criar Carta Proposta
 function divDadosCarta (dados_cp) {
-    'use strict';
-    //Insere DIV com dados obtidos para criar Carta Proposta
+    'use strict';    
 
     let textos_cp = dados_cp.join('|');
 
@@ -261,4 +246,5 @@ function divDadosCarta (dados_cp) {
     ativ.click();
     document.activeElement.blur();
     window.open(template_link);
+    ativ.remove();
 }
