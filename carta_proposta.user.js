@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gerador de Carta Proposta
 // @namespace    http://tampermonkey.net/
-// @version      23.7.12
+// @version      23.7.18
 // @description  Obtem dados para carta proposta e lança no clipboard
 // @author       You
 // @match        http://webapps.sorocaba.sescsp.org.br/siplan/*
@@ -19,6 +19,7 @@
 // Insere máscara de reais corrigida em ação
 // Insere parcelamento de valores
 // 12/7 Retira dados de Licença de Exibição >>> Falta ajustar word
+// 18/7 Corrigido conversão de float para reais
 
 waitForKeyElements ("#btn-export", inserirBotao);
 
@@ -27,6 +28,7 @@ var patt = /96\d{12}/i;
 var n_acao = patt.exec(adress);
 var link_acao = "http://webapps.sorocaba.sescsp.org.br/siplan/api/atividade/" + n_acao;
 var resposta = '';
+//Office URI Schemes
 const template_link = "ms-word:nft|u|https://sescsp.sharepoint.com/sites/NcleoArtstico-SescSorocaba/Shared%20Documents/Adm%20Programa%C3%A7%C3%A3o/Cartas%20Proposta/teste%20-%20CP%20-%20Universal%20Macro.dotm";
 
 //Monitorar requisições JSON
@@ -112,25 +114,7 @@ function inserirBotao(){
 }
 
 function toReais(numero) {
-    // Converte o número para string e remove caracteres indesejados
-    var numeroString = numero.toString().replace(/\D/g, '');
-  
-    // Verifica se o número é válido
-    if (isNaN(numeroString)) {
-      return 'Número inválido';
-    }
-  
-    // Adiciona o separador de milhar
-    numeroString = numeroString.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-  
-    // Formata a parte decimal
-    var partes = numeroString.split('.');
-    var reais = partes[0];
-    var centavos = partes.length > 1 ? partes[1] : '00';
-    centavos = centavos.padEnd(2, '0');
-  
-    // Retorna o número formatado em reais
-    return 'R$ ' + reais + ',' + centavos;
+    return numero.toLocaleString('pt-br',{style: 'currency', currency: 'BRL'});
   }
 
 // Retorna listagem de objetos
