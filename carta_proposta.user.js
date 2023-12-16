@@ -15,11 +15,10 @@
 
 
 // MELHORIAS E FUNCIONALIDADES
-// 20/6/23
-// Insere máscara de reais corrigida em ação
 // Insere parcelamento de valores
-// 12/7 Retira dados de Licença de Exibição >>> Falta ajustar word
+// 12/7 Retira dados de Licença de Exibição
 // 18/7 Corrigido conversão de float para reais
+// Corrige ano nas cartas a partir de 2024
 
 waitForKeyElements ("#btn-export", inserirBotao);
 
@@ -29,9 +28,9 @@ var n_acao = patt.exec(adress);
 var link_acao = "http://webapps.sorocaba.sescsp.org.br/siplan/api/atividade/" + n_acao;
 var resposta = '';
 //Office URI Schemes
-const template_link = "ms-word:nft|u|https://sescsp.sharepoint.com/sites/NcleoArtstico-SescSorocaba/Shared%20Documents/Adm%20Programa%C3%A7%C3%A3o/Cartas%20Proposta/CP%20-%20Universal.dotm";
+const template_link = "ms-word:nft|u|https://sescsp.sharepoint.com/sites/NcleoArtstico-SescSorocaba/Shared%20Documents/Adm%20Programa%C3%A7%C3%A3o/Cartas%20Proposta/teste%20-%20CP%20-%20Universal%20Macro.dotm";
 
-//Monitorar requisições JSON
+// Monitorar requisições JSON
 // Filtrar solicitações com base na URL
 // Endereço de calendário /siplan/api/atividade?start=08%2F05%2F2023&end=15%2F05%2F2023
 // URL de ação /siplan/api/atividade/96000309122407?
@@ -77,10 +76,6 @@ $(document).bind('keydown', 'ctrl+i', function(event){
 
 });
 
-function vai(){
-    obterDadosCP(JSON.parse(resposta));
-}
-
 // Ajustar função para alimentar dados gerais da ação
 // talvez criar objeto carta, com propriedades: titulo, complemento, datas_texto, contratos: array, ...
 function obterDadosCP(acao){
@@ -92,13 +87,13 @@ function obterDadosCP(acao){
     var datas = gerar_texto_datas(acao.datas);
 
     //  Criar rotina para verificar todos os contrato, loop em Array, propriedades nome: parcelas: total:
-    var texto_parcelas = gerar_texto_contratos(acao)[0]; 
+    var texto_parcelas = gerar_texto_contratos(acao)[0]; //obtem primeiro item de valores de contrato
 
     var total = texto_parcelas.total;
     var parcelas = texto_parcelas.parcelas;
     var contratado = texto_parcelas.nome;
 
-    divDadosCarta(['titulo=' + titulo, 'contratado=' + contratado, 'datas=' + datas, 'total=' + total, 'parcelas=' + parcelas]);
+    gerarDivCorrecoes(['titulo=' + titulo, 'contratado=' + contratado, 'datas=' + datas, 'total=' + total, 'parcelas=' + parcelas]);
 }
 
 // Ajustar função para lidar com listagem de objetos de contratos
@@ -109,7 +104,7 @@ function inserirBotao(){
     d.append('<button class="btn" id="btn-carta" role="button" data-toggle="modal">Carta Proposta</button>');
     $("#btn-carta").click(function(){
         //Alterar função para alimentar variáveis gerais da ação
-        vai();
+        obterDadosCP(JSON.parse(resposta));
     });
 }
 
@@ -156,11 +151,14 @@ function gerar_texto_datas(datas){
     //Obtem dia e mês via regex
     const r_dia_mes = /0?(\d{1,2})\/0?(\d{1,2})\/20(\d{1,2})/i;
     const r_hora = /\d\d.\d\d$/i;
+    const r_ano = /.*\/(\d\d)(\d\d).*/i;
     const r = /; $/; //identifica sobras de carater no final
 
     var z = {}; //guarda dados sobre datas para gerar texto
 
     datas.forEach(data => {
+        
+        //let ano = r_ano.exec(data.dataAgenda.dataInicio)[2];
         let mes = r_dia_mes.exec(data.dataAgenda.dataInicio)[2];
         let dia = r_dia_mes.exec(data.dataAgenda.dataInicio)[1];
         ano = r_dia_mes.exec(data.dataAgenda.dataInicio)[3]; // teste de var ano
@@ -182,21 +180,24 @@ function gerar_texto_datas(datas){
 
     for (let horario in z){
         for (let mes in z[horario]){
-            texto += z[horario][mes].join(', ') + '/' + mes + ', ';
+            //texto += z[horario][mes].join(', ') + '/' + mes + '/' + ano + ', ' ;
+            texto += z[horario][mes].join(', ') + '/' + mes + ', ' ;
         }
         texto += horario + '; ';
     }
 
+    //retira último ; da string de datas
     texto = texto.replace(r, '');
 
+    //regez que identifica ultimo horário
     const x = /(, das .{1,22}$)/;
-    texto = texto.replace(x, '/23$1');
+    texto = texto.replace(x, '/' + ano + '$1');
 
     return texto
 }
 
 //Insere DIV com dados obtidos para criar Carta Proposta
-function divDadosCarta (dados_cp) {
+function gerarDivCorrecoes (dados_cp) {
     'use strict';    
 
     let textos_cp = dados_cp.join('|');
