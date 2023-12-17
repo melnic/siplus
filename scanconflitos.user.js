@@ -8,11 +8,22 @@
 // @grant        none
 // @require      https://gist.github.com/raw/2625891/waitForKeyElements.js
 // @require      https://raw.githubusercontent.com/jeresig/jquery.hotkeys/master/jquery.hotkeys.js
+// @downloadURL https://github.com/melnic/siplus/raw/master/scanconflitos.user.js
+// @updateURL   https://github.com/melnic/siplus/raw/master/scanconflitos.user.js
 // @grant       GM_addStyle
 // ==/UserScript==
 
-//Inserir Funções para acionar quando carregar itens
+//Próxima função Conflitos de Camarim
+//GET Com demandas para Alimentação
+// http://webapps.sorocaba.sescsp.org.br/siplan/api/atividade?start=03%2F07%2F2023&end=10%2F07%2F2023&lo=96000000000038&lo=96000000000039&lo=96000000000040&lo=96000000000041&lo=96000000000042&lo=96000000000043&lo=96000000000016&av=TODAS&servicos=ALIMENTACAO&_=1688601170817
+// &av=TODAS&servicos=ALIMENTACAO&_=1688601170817
+//GET Alimentação
+const camarins_start = 'http://webapps.sorocaba.sescsp.org.br/siplan/api/atividade?';
+//start=26%2F06%2F2023&end=03%2F07%2F2023&
+const camarins = 'lo=96000000000038&lo=96000000000039&lo=96000000000040&lo=96000000000041&lo=96000000000042&lo=96000000000043&lo=96000000000016';
+const camarins_end = '&av=TODAS&servicos=ALIMENTACAO';
 
+//Inserir Funções para acionar quando carregar itens
 var resposta = '';
 
 //waitForKeyElements (".fc-event", alert('Div de evento detectado'));
@@ -21,43 +32,70 @@ var open = XMLHttpRequest.prototype.open;
 var acoes_div = $('');
 var dados = [];
 
-const intervaloMinimo = 60; //em minutos
-var data = "09/05/2023 08:00";
+const intervaloMinimo = 60; //Intervalo Mínimo entre ações, em minutos
 var resultado = [];
 var conflitos = [];
 var acoes_local = [];
 var locais_usados = [];
+var haConflito = false;
+//Estilos a serem aplicados nos eventos do calendário
 const css_conflitos = '.intervaloCurto { border-left: 3px solid #e6ff00 !important; margin-left:-3px !important} .conflito {border-left: 3px solid #ff2859 !important; margin-left:-3px !important}';
 
+//Monitora dados de ações que são recebidas
 XMLHttpRequest.prototype.open = function(method, url, async) {
-    //alert(url);
     if (url.indexOf('api/atividade?start=') !== -1) {
         this.addEventListener('load', function() {
             resposta = this.responseText;
-            //alert('GET de datas identificado');
+            haConflito = false;
 
+            //alert(url);
+
+            //verificarCamarins(url);
             scanConflitos(resposta);
+            //alert(haConflito);
         });
     }
     //
     open.apply(this, arguments);
 };
 
-// RETOMAR A PARTIR DAQUI
+function verificarCamarins(url){
+    let r = /.*(start.*end.{15})/ig;
+    let periodo = r.exec(t)[1];
+    let getURL = camarins_start + periodo + camarins + camarins_end;
+
+    alert(getURL);
+    //let dados = getJSON(getURL);
+    //alert(dados);
+}
+
+//Função para obter dados de Ações requisitando JSON
+var getJSON = function(url) {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', url, true);
+    xhr.responseType = 'json';
+    xhr.onload = function() {
+        var status = xhr.status;
+        if (status === 200) {
+            //callback(null, xhr.response);
+            alert('não foi possível obter JSON');
+        } else {
+            //callback(status, xhr.response);
+            return xhr.response;
+        }
+    };
+    xhr.send();
+};
 
 function scanConflitos(d){
-    //alert('Scan Conflitos');
     dados = JSON.parse(d);
 
-    //JSON.parse(resposta);  Transforma texto em objeto JSON
     acoes_div = $('.fc-event');
-    //var
-    const intervaloMinimo = 60; //em minutos
-    var data = "09/05/2023 08:00";
-    var resultado = [];
-    var conflitos = [];
-    var acoes_local = [];
-    var locais_usados = [];
+    //var data = "09/05/2023 08:00";
+    //var resultado = [];
+    //var conflitos = [];
+    //var acoes_local = [];
+    //var locais_usados = [];
 
     //Inserir tabela de estilo para conflitos no DOM
     var style = document.createElement('style');
@@ -68,7 +106,8 @@ function scanConflitos(d){
     let e = filtrarDuplicatas(dados);  //Filtra dados duplicados no JSON recebido
     e.forEach(inserirElemento);        //Vincula divs ao Json com dados das ações, para posterior alteração de estilo
 
-    scanAcoes(e); //verifica conflitos de data e horário
+    scanLocais(e); //verifica conflitos de data e horário
+
 }
 
 function filtrarDuplicatas(d){
@@ -97,64 +136,76 @@ function inserirElemento(item, index, arr){
     item['div'] = acoes_div[index];
     item['inicio'] = converterParaData(item.start);
     item['fim'] = converterParaData(item.end);
+
+    //\[RS\]/.test(item.title) ? acoes_div[index].css({ 'opacity' : 0.3 }) : null;
+    /\[RS\]/.test(item.title) ? $(acoes_div[index]).css({ 'opacity' : 0.3 }) : null;
 }
 
-function scanAcoes(d){
-  let locais_usados = []; //ver se melhor ser variável global
+function scanLocais(d){
+ 
+  //let locais_usados = []; //ver se melhor ser variável global
   d.forEach(function(entry){
+    
+    //Cria listagem de locais usados para posterior filtro
     if (locais_usados.indexOf(entry.local) == -1){
       locais_usados.push(entry.local);
     }
 	});
 
-  	let acoes_local = []; //ver se global é melhor
+  	//let acoes_local = []; //ver se global é melhor
+
+    //Filtra dados de ações apenas por local e verifica datas em conflito
 	locais_usados.forEach(function(entry){
-		//acoes_local = dados.filter(function(entry2){
         acoes_local = dados.filter(function(entry2){
 			return entry2.local == entry;
 		});
 		scanDatas(acoes_local);
 	});
+    return haConflito
+}
 
-  function scanDatas(place){
-  	for (var i = 0; i < place.length; i++){
-  		if (typeof place[i + 1] !== 'undefined'){
-  			var acao = place[i];
-  			for (var j = i + 1; j < place.length; j++){
-  				var comparada = place[j];
+function scanDatas(place){
 
-				//Verificar se ações não tem mesmo ID
-				if (acao.id != comparada.id){
-                    let z = acao.div.offsetWidth - 3;
-	  				let res = verificarConflito(acao, comparada);
-	  				if(res.conflito){
-	  					resultado.push([acao, comparada, 'conflito']);
-                        //acao.div.Css
-                        acao.div.classList.add("conflito");
-                        //acao.div.style.width= z + 'px';
-                        //alert(acao.div);
-                        comparada.div.classList.add("conflito");
-                        //comparada.div.style.width= z + 'px';
-                        //usar propriedade offsetWidth
-	  				};
-	                //if(res.intervaloCurto && !res.conflito){
-                    if(!res.conflito){
-                        if(res.intervaloCurto){
-                            resultado.push([acao, comparada, 'intervaloCurto']);
-                            //acao.div.Css
-                            acao.div.classList.add("intervaloCurto");
-                            //acao.div.style.width= z + 'px';
-                            //alert(acao.div);
-                            comparada.div.classList.add("intervaloCurto");
-                            //comparada.div.style.width= z + 'px';
-                            //usar propriedade offsetWidth
-                        };
-                    }
-				}
-  			}
-  		}
-  	}
-  }
+    for (var i = 0; i < place.length; i++){
+        if (typeof place[i + 1] !== 'undefined'){
+            var acao = place[i];
+            for (var j = i + 1; j < place.length; j++){
+                var comparada = place[j];
+
+              //Verificar se ações não tem mesmo ID
+              if (acao.id != comparada.id){
+                  //Offset para deslocar DIV da ação para esquerda, ligado a CSS
+                  let z = acao.div.offsetWidth - 3;
+
+                    let res = verificarConflito(acao, comparada);
+                    if(res.conflito){
+                        resultado.push([acao, comparada, 'conflito']);
+                      //acao.div.Css
+                      acao.div.classList.add("conflito");
+                      //acao.div.style.width= z + 'px';
+                      //alert(acao.div);
+                      comparada.div.classList.add("conflito");
+                      //comparada.div.style.width= z + 'px';
+                      haConflito = true;
+                    };
+                  //if(res.intervaloCurto && !res.conflito){
+                  if(!res.conflito){
+                      if(res.intervaloCurto){
+                          resultado.push([acao, comparada, 'intervaloCurto']);
+                          //acao.div.Css
+                          acao.div.classList.add("intervaloCurto");
+                          //acao.div.style.width= z + 'px';
+                          //alert(acao.div);
+                          comparada.div.classList.add("intervaloCurto");
+                          //comparada.div.style.width= z + 'px';
+                          haConflito = true;
+                      };
+                  }
+              }
+            }
+        }
+    }
+    return haConflito
 }
 
 function converterParaData(data){
@@ -184,3 +235,4 @@ function verificarConflito(data1, data2) {
 
   return { conflito: false, intervaloCurto: diffHrs < 1 };
 }
+
