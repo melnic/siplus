@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Scan Conflitos Espaços
 // @namespace    http://tampermonkey.net/
-// @version      23.6.14
+// @version      23.12.17
 // @description  Verificar Conflitos
 // @author       You
 // @match        http://webapps.sorocaba.sescsp.org.br/siplan/*
@@ -26,8 +26,6 @@ const camarins_end = '&av=TODAS&servicos=ALIMENTACAO';
 //Inserir Funções para acionar quando carregar itens
 var resposta = '';
 
-//waitForKeyElements (".fc-event", alert('Div de evento detectado'));
-
 var open = XMLHttpRequest.prototype.open;
 var acoes_div = $('');
 var dados = [];
@@ -48,9 +46,6 @@ XMLHttpRequest.prototype.open = function(method, url, async) {
             resposta = this.responseText;
             haConflito = false;
 
-            //alert(url);
-
-            //verificarCamarins(url);
             scanConflitos(resposta);
             //alert(haConflito);
         });
@@ -58,16 +53,6 @@ XMLHttpRequest.prototype.open = function(method, url, async) {
     //
     open.apply(this, arguments);
 };
-
-function verificarCamarins(url){
-    let r = /.*(start.*end.{15})/ig;
-    let periodo = r.exec(t)[1];
-    let getURL = camarins_start + periodo + camarins + camarins_end;
-
-    alert(getURL);
-    //let dados = getJSON(getURL);
-    //alert(dados);
-}
 
 //Função para obter dados de Ações requisitando JSON
 var getJSON = function(url) {
@@ -91,11 +76,6 @@ function scanConflitos(d){
     dados = JSON.parse(d);
 
     acoes_div = $('.fc-event');
-    //var data = "09/05/2023 08:00";
-    //var resultado = [];
-    //var conflitos = [];
-    //var acoes_local = [];
-    //var locais_usados = [];
 
     //Inserir tabela de estilo para conflitos no DOM
     var style = document.createElement('style');
@@ -143,7 +123,6 @@ function inserirElemento(item, index, arr){
 
 function scanLocais(d){
  
-  //let locais_usados = []; //ver se melhor ser variável global
   d.forEach(function(entry){
     
     //Cria listagem de locais usados para posterior filtro
@@ -151,8 +130,6 @@ function scanLocais(d){
       locais_usados.push(entry.local);
     }
 	});
-
-  	//let acoes_local = []; //ver se global é melhor
 
     //Filtra dados de ações apenas por local e verifica datas em conflito
 	locais_usados.forEach(function(entry){
@@ -235,4 +212,3 @@ function verificarConflito(data1, data2) {
 
   return { conflito: false, intervaloCurto: diffHrs < 1 };
 }
-
