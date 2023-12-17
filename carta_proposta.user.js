@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gerador de Carta Proposta
 // @namespace    http://tampermonkey.net/
-// @version      23.12.14
+// @version      23.12.17
 // @description  Obtem dados para carta proposta e lança no clipboard
 // @author       You
 // @match        http://webapps.sorocaba.sescsp.org.br/siplan/*
@@ -19,6 +19,7 @@
 // 12/7 Retira dados de Licença de Exibição
 // 18/7 Corrigido conversão de float para reais
 // Corrige ano nas cartas a partir de 2024
+// Corrigido nome de arquivo com macro
 
 waitForKeyElements ("#btn-export", inserirBotao);
 
@@ -28,7 +29,8 @@ var n_acao = patt.exec(adress);
 var link_acao = "http://webapps.sorocaba.sescsp.org.br/siplan/api/atividade/" + n_acao;
 var resposta = '';
 //Office URI Schemes
-const template_link = "ms-word:nft|u|https://sescsp.sharepoint.com/sites/NcleoArtstico-SescSorocaba/Shared%20Documents/Adm%20Programa%C3%A7%C3%A3o/Cartas%20Proposta/teste%20-%20CP%20-%20Universal%20Macro.dotm";
+//const template_link = "ms-word:nft|u|https://sescsp.sharepoint.com/sites/NcleoArtstico-SescSorocaba/Shared%20Documents/Adm%20Programa%C3%A7%C3%A3o/Cartas%20Proposta/teste%20-%20CP%20-%20Universal%20Macro.dotm";
+const template_link = "ms-word:nft|u|https://sescsp.sharepoint.com/sites/NcleoArtstico-SescSorocaba/Shared%20Documents/Adm%20Programa%C3%A7%C3%A3o/Cartas%20Proposta/CP%20-%20Universal.dotm";
 
 // Monitorar requisições JSON
 // Filtrar solicitações com base na URL
