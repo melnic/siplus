@@ -1,13 +1,15 @@
 // ==UserScript==
 // @name         Verificador de Ação
 // @namespace    http://tampermonkey.net/
-// @version      19.11.23
+// @version      23.12.19
 // @description  Obtem dados para carta proposta e lança no clipboard
 // @author       You
 // @match        http://webapps.sorocaba.sescsp.org.br/siplan/*
 // @grant        none
 // @require     https://gist.github.com/raw/2625891/waitForKeyElements.js
 // @require     https://raw.githubusercontent.com/jeresig/jquery.hotkeys/master/jquery.hotkeys.js
+// @downloadURL https://github.com/melnic/siplus/raw/master/revisor.user.js
+// @updateURL   https://github.com/melnic/siplus/raw/master/revisor.user.js
 // @grant       GM_addStyle
 // ==/UserScript==
 
