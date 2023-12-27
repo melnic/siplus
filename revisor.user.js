@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Verificador de Ação
 // @namespace    http://tampermonkey.net/
-// @version      23.12.19
+// @version      23.12.27
 // @description  Obtem dados para carta proposta e lança no clipboard
 // @author       You
 // @match        http://webapps.sorocaba.sescsp.org.br/siplan/*
@@ -23,7 +23,7 @@ var link_acao = "http://webapps.sorocaba.sescsp.org.br/siplan/api/atividade/" + 
 var resposta = '';
 
 //Insere div com infos quando elementos são gerados
-waitForKeyElements("#programacao-navbar", gerarDivCorrecoes);
+waitForKeyElements("#programacao-navbar", criarDivCopia);
 
 // Monitorar requisições JSON
 // Filtrar solicitações com base na URL
@@ -77,7 +77,7 @@ function converterParaData(data){
     return new Date(year, month, day, hour, minute);
 }
 
-function camarimOK(data, servico){
+function camarimAntecipado(data, servico){
     
     let conversor = 1000 * 60 * 60;
     //let ddd = dados.datas[0];
@@ -101,7 +101,7 @@ function camarimOK(data, servico){
 
 
 //Inserir novo div com mensagens em #module-container > div > div.row-fluid
-function gerarDivCorrecoes() {
+function criarDivCopia() {
     var erros = [];
 
     //CHECKLIST
@@ -160,17 +160,31 @@ function gerarDivCorrecoes() {
         //Loop derivações (serviços)
         data.servicos.forEach(servico => {
             //verifica se local de serviço é igual ao da data
-            servico.local != data.local ? erros.push('Locais divergentes: ' + servico.areaNome + ': ' + servico.dataSolicitacao.dataInicio.replace(/\/\d\d\d\d/,"")) : null;
+            if(servico.local != data.local){
+                if(servico.areaNome != "Alimentação"){
+                    sem_derivacao.alimentacao = true;
+                    erros.push('Locais divergentes: ' + servico.areaNome + ': ' + servico.dataSolicitacao.dataInicio.replace(/\/\d\d\d\d/,""));
+                }else{
+                    //Se for demanda de Alimentação >>>
+                    sem_derivacao.alimentacao = null;
+                    //teste de horário antecipado de camarim
+                    camarimAntecipado(data, servico) ? null : erros.push("Camarim: verificar antecipação");
 
-            //Verifica se é demanda por Camarim ou Coffee para Alimentação
-            if(/Camarim|Coffee/.test(servico.itemDescricao)){
-            //if(servico.areaNome == "Alimentação"){
-                sem_derivacao.alimentacao = null;
-                camarimOK(data, servico) ? erros.push('Caramim ok: horários antecipados') : erros.push("Camarim: verificar horários");
-            } else{
-                sem_derivacao.alimentacao = true;
-                                
+                    //Se item dor camarim, ignora incorência em espaços
+                    /Camarim|Coffee/.test(servico.itemDescricao) ?
+                        null :
+                        erros.push('Locais divergentes: ' + servico.areaNome + ': ' + servico.dataSolicitacao.dataInicio.replace(/\/\d\d\d\d/,""));
+                }
+            }else{            
+                null;
             }
+
+            //Imprime horários dos camarins
+            // /Camarim|Coffee/.test(servico.itemDescricao)
+            //     ? erros.push(servico.itemDescricao + '> ' + servico.local + ': ' + servico.dataSolicitacao.dataInicio.replace(/\/\d\d\d\d/,""))
+            //     : null;
+
+            //Verifica ausências de inserções
             servico.areaNome == "Infraestrutura" ? sem_derivacao.infraestrutura = true : null;
             servico.areaNome == "Serviços Gerais" ? sem_derivacao.servicos = true : null;
             servico.areaNome == "Operação de Montagem" ? sem_derivacao.audiovisual = true : null;
