@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gerador de Carta Proposta
 // @namespace    http://tampermonkey.net/
-// @version      23.12.23
+// @version      23.12.28
 // @description  Obtem dados para carta proposta e lança no clipboard
 // @author       You
 // @match        http://webapps.sorocaba.sescsp.org.br/siplan/*
@@ -20,7 +20,9 @@
 // 18/7 Corrigido conversão de float para reais
 // Corrige ano nas cartas a partir de 2024
 // Corrigido nome de arquivo com macro
+// 28/12 Trabalha com vários contratos
 
+//inserirBotaoCPs(gerarDadosDeContratos(JSON.parse(resposta)));
 waitForKeyElements("#btn-export", inserirBotao);
 
 var adress = window.location.href;
@@ -68,30 +70,86 @@ var getJSON = function (url, callback) {
     xhr.send();
 };
 
-//Como utilizar a função getJSON: Funcional CTRL + I Busca dados da ação
-$(document).bind('keydown', 'ctrl+i', function (event) {
+//Insere botão no caso de multiplos contratos na ação
+//Formato
+// menuItems = [
+//     { id: "btn-exclusao", text: "Excluir" },
+//     { id: "btn-quadro-resumo", text: "Quadro resumo" },
+// ]:
+function inserirBotaoCPs(dados) {
+    // Create a new div element with class "btn-group"
+    var btnGroupDiv = document.createElement("div");
+    btnGroupDiv.className = "btn-group";
 
-    event.preventDefault();
-    event.stopPropagation();
+    // Create a button element with the specified properties
+    var buttonElement = document.createElement("button");
+    buttonElement.type = "button";
+    buttonElement.className = "btn";
+    buttonElement.setAttribute("data-toggle", "dropdown");
+    buttonElement.innerText = "Cartas Proposta ";
 
-    obterDadosCP(JSON.parse(resposta));
+    // Create a span element with class "caret"
+    var caretSpan = document.createElement("span");
+    caretSpan.className = "caret";
 
-});
+    // Append the span element to the button
+    buttonElement.appendChild(caretSpan);
 
-function inserirBotao() {
-  
-    var d = $('#btn-export').parent();
-    d.append('<button class="btn" id="btn-carta" role="button" data-toggle="modal">Carta Proposta</button>');
-    $("#btn-carta").click(function(){
-        //Alterar função para alimentar variáveis gerais da ação
-        obterDadosCP(JSON.parse(resposta));
+    // Append the button element to the div
+    btnGroupDiv.appendChild(buttonElement);
+
+    // Create a ul element with class "dropdown-menu" and role "menu"
+    var ulElement = document.createElement("ul");
+    ulElement.className = "dropdown-menu";
+    ulElement.setAttribute("role", "menu");
+
+    var menuItems = dados == null ?
+        menuItems = [
+            { id: "btn-exclusao", text: "Excluir" },
+            { id: "btn-quadro-resumo", text: "Quadro resumo" },
+        ] :
+        menuItems = dados;
+    ;
+
+    // Iterate through the menu items and create li and a elements
+    menuItems.forEach(function (item) {
+        var liElement = document.createElement("li");
+        var aElement = document.createElement("a");
+        aElement.className = "pointer";
+        aElement.id = item[0].numero;
+        aElement.innerText = item[0].contratado;
+
+        if (item.href) {
+            aElement.href = item[0].href;
+        }
+
+        aElement.addEventListener("click", function () {
+            // Call a specific function when the element is clicked
+            copiarParaClipBoard(item[0].clipboard);
+        });
+
+        liElement.appendChild(aElement);
+        ulElement.appendChild(liElement);
     });
+
+    // Append the ul element to the div
+    btnGroupDiv.appendChild(ulElement);
+
+    // Append the div to the body or any other container element
+    //document.body.appendChild(btnGroupDiv);
+    document.querySelector('#btn-export').parentElement.appendChild(btnGroupDiv);
+}
+
+//Caso seja um contrato apenas
+function inserirBotao() {
+
+    inserirBotaoCPs(gerarDadosDeContratos(JSON.parse(resposta)));
 
 }
 
 // Ajustar função para alimentar dados gerais da ação
 // talvez criar objeto carta, com propriedades: titulo, complemento, datas_texto, contratos: array, ...
-function obterDadosCP(acao) {
+function gerarDadosDeContratos(acao) {
     const r = /(Com )(.*?)[.,]/i;
     const s = /Com ((Cia.?)?.+?)[,.]/ig;
 
@@ -101,30 +159,53 @@ function obterDadosCP(acao) {
     var total = "";
     var parcelas = "";
     var contratado = "";
+    var contratos = [];
 
     //Gerar listagem com dados de contratos
     var texto_parcelas = gerarTextosDosContratos(acao);
 
     // Menu com Vários Contratos
     if (texto_parcelas.length >= 1) {
-        //if (texto_parcelas.length){
-        total = texto_parcelas[0].total;
-        parcelas = texto_parcelas[0].parcelas;
-        contratado = texto_parcelas[0].contratado;
+
+        //Para vários contratos
+        // total = texto_parcelas[0].total;
+        // parcelas = texto_parcelas[0].parcelas;
+        // contratado = texto_parcelas[0].contratado;
+        texto_parcelas.forEach((item, index) => {
+            total = item.total;
+            parcelas = item.parcelas;
+            contratado = item.contratado;
+
+            let infos = ['titulo=' + titulo, 'contratado=' + contratado, 'datas=' + datas, 'total=' + total, 'parcelas=' + parcelas];
+            //texto com dados a serem passados para o ClipBoard de uma ação
+            let texto = infos.join('|');
+            contratos.push([{
+                'numero': 'carta' + index,
+                'contratado': contratado,
+                'clipboard': texto,
+            }])
+        });
+
+
     } else {
+        //Para 1 Contrato
         total = texto_parcelas[0].total;
         parcelas = texto_parcelas[0].parcelas;
         contratado = texto_parcelas[0].contratado;
+
+        let infos = ['titulo=' + titulo, 'contratado=' + contratado, 'datas=' + datas, 'total=' + total, 'parcelas=' + parcelas];
+        //texto com dados a serem passados para o ClipBoard de uma ação
+        let texto = infos.join('|');
+        contratos.push([{
+            'numero': carta1,
+            'contratado': contratado,
+            'clipboard': texto,
+        }])
     }
-
+    return contratos
     //Cria Div com dados de um contrato
-    criarDivCopiaCola(['titulo=' + titulo, 'contratado=' + contratado, 'datas=' + datas, 'total=' + total, 'parcelas=' + parcelas]);
+    //copiarParaClipBoard(['titulo=' + titulo, 'contratado=' + contratado, 'datas=' + datas, 'total=' + total, 'parcelas=' + parcelas]);
 }
-
-// Ajustar função para lidar com listagem de objetos de contratos
-// Usar estrutura do botão <button type="button" class="btn" data-toggle="dropdown">
-
-
 
 function toReais(numero) {
     return numero.toLocaleString('pt-br', { style: 'currency', currency: 'BRL' });
@@ -157,7 +238,11 @@ function gerarTextosDosContratos(acao) {
             texto_parcelas = "";
         }
         //retorno.push({'contratado':contrato.descricao,'total':toReais(contrato.custo), 'parcelas': texto_parcelas});
-        retorno.push({ 'contratado': contratado, 'total': toReais(contrato.custo), 'parcelas': texto_parcelas });
+        retorno.push({
+            'contratado': contratado,
+            'total': toReais(contrato.custo),
+            'parcelas': texto_parcelas
+        });
     })
 
     return retorno
@@ -216,11 +301,11 @@ function gerar_texto_datas(datas) {
 }
 
 //Insere DIV com dados obtidos para criar Carta Proposta
-function criarDivCopiaCola(dados_cp) {
+function copiarParaClipBoard(dados_cp) {
     'use strict';
 
     //Gerar String para o ClipBoard
-    let textos_cp = dados_cp.join('|');
+    let textos_cp = dados_cp;
 
     // Inserir Dados da ação em input
     var n = document.getElementById("link-anexos");
