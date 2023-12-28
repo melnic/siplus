@@ -13,6 +13,7 @@
 // @grant       GM_addStyle
 // ==/UserScript==
 
+
 // MELHORIAS
 // Oculta menu de navegação ao clicar na lista de mensagens
 // Verifica se horário de camarim está antecipado
@@ -51,6 +52,18 @@ XMLHttpRequest.prototype.open = function (method, url, async) {
     }
     open.apply(this, arguments);
 };
+
+$(document).keyup(function(e) {
+    if (e.key === "Escape") { // escape key maps to keycode `27`
+       $('#quadro-resumo-modal > div > div.modal-header > button').click();
+   }
+});
+
+waitForKeyElements(".modal-backdrop", (element) => {
+    element.on( "click", function() {
+       $('#quadro-resumo-modal > div > div.modal-header > button').click();
+    });
+});
 
 function obterDadosCP(acao) {
 
@@ -245,4 +258,5 @@ function verificarAcao() {
             revisao.appendChild(ul);       // add list to the container.
         }
     }
+
 }
