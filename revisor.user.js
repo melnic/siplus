@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Verificador de Ação
 // @namespace    http://tampermonkey.net/
-// @version      23.12.28
+// @version      23.12.30
 // @description  Obtem dados para carta proposta e lança no clipboard
 // @author       You
 // @match        http://webapps.sorocaba.sescsp.org.br/siplan/*
@@ -11,7 +11,7 @@
 // @downloadURL https://github.com/melnic/siplus/raw/master/revisor.user.js
 // @updateURL   https://github.com/melnic/siplus/raw/master/revisor.user.js
 // @grant       GM_addStyle
-// ==/UserScript==
+==/UserScript==
 
 
 // MELHORIAS
@@ -32,7 +32,7 @@ var n_acao = patt.exec(adress);
 var link_acao = "http://webapps.sorocaba.sescsp.org.br/siplan/api/atividade/" + n_acao;
 var resposta = '';
 var w = waitForKeyElements;
-var quadroResumo = false;
+var quadroResumoFirstAppear = false;
 //Insere div com infos quando elementos são gerados
 waitForKeyElements("#programacao-navbar", verificarAcao);
 
@@ -48,6 +48,7 @@ XMLHttpRequest.prototype.open = function (method, url, async) {
         this.addEventListener('load', function () {
             //resposta = this.responseText;
             resposta = (JSON.parse(this.responseText));
+            quadroResumoFirstAppear = false;
         });
     }
     open.apply(this, arguments);
@@ -60,8 +61,22 @@ $(document).keyup(function(e) {
 });
 
 waitForKeyElements(".modal-backdrop", (element) => {
+    let btnClose = $('#quadro-resumo-modal > div > div.modal-header > button');
+    if (!quadroResumoFirstAppear) {
+        quadroResumoFirstAppear = true;
+        let fundo = $('.modal-backdrop');
+        let quadro = $('#quadro-resumo-modal');
+        //fundo.style.visibility = 'hidden';
+        //quadro.style.visibility = 'hidden';
+
+        //btnClose.click();
+        document.body.style.overflowY = 'visible';
+
+        //fundo.style.visibility='visible'
+        //quadro.style.visibility='visible'
+    }
     element.on( "click", function() {
-       $('#quadro-resumo-modal > div > div.modal-header > button').click();
+       btnClose.click();
     });
 });
 
@@ -165,13 +180,12 @@ function verificarAcao() {
             //verifica se local de serviço é igual ao da data
             if (servico.local != data.local) {
                 if (servico.areaNome != "Alimentação") {
-                    sem_derivacao.alimentacao = true;
                     mensagens.push('Locais divergentes: ' + servico.areaNome + ': ' + servico.dataSolicitacao.dataInicio.replace(/\/\d\d\d\d/, ""));
                 } else {
                     //Se for demanda de Alimentação >>>
-                    sem_derivacao.alimentacao = null;
+                    sem_derivacao.alimentacao = true;
                     //teste de horário antecipado de camarim
-                    camarimAntecipado(data, servico) ? null : mensagens.push("Camarim: verificar antecipação");
+                    camarimAntecipado(data, servico) ? null : mensagens.push("Camarim antecipação: " + servico.dataSolicitacao.dataInicio.replace(/\/\d\d\d\d/, ""));
 
                     //Se item dor camarim, ignora incorência em espaços
                     /Camarim|Coffee|Reserva/.test(servico.itemDescricao) ?
@@ -185,8 +199,8 @@ function verificarAcao() {
                 let sem_anexos = true;
                 let sem_textos = true;
                 servico.arquivos ? sem_anexos = false : sem_anexos = true;
-                servico.observacao ? sem_textos = false : sem_textos = true;
-                servico.descricao ? sem_textos = false : sem_textos = true;
+                servico.observacao || servico.descricao ? sem_textos = false : sem_textos = true;
+                //servico.descricao ? sem_textos = false : sem_textos = true;
 
                 sem_anexos && sem_textos ? mensagens.push('Op. Montagem sem orientações (anexo ou texto') : null;
                 //sem_textos ? mensagens.push('Op. Montagem sem completo ou observações') : null;
@@ -198,6 +212,7 @@ function verificarAcao() {
             //     : null;
 
             //Verifica ausências de inserções
+            servico.areaNome == "Alimentação" ? sem_derivacao.alimentacao = true : null;
             servico.areaNome == "Infraestrutura" ? sem_derivacao.infraestrutura = true : null;
             servico.areaNome == "Serviços Gerais" ? sem_derivacao.servicos = true : null;
             servico.areaNome == "Operação de Montagem" ? sem_derivacao.audiovisual = true : null;
