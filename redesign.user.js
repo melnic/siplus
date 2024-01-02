@@ -79,8 +79,4 @@
 
     //alert('Teste de versão ok, versão 2');
 })();
-    }
-
-    alert('Teste de versão ok, versão 2');    
-})();
 
