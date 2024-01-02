@@ -202,7 +202,7 @@ function verificarAcao() {
                 servico.observacao || servico.descricao ? sem_textos = false : sem_textos = true;
                 //servico.descricao ? sem_textos = false : sem_textos = true;
 
-                sem_anexos && sem_textos ? mensagens.push('Op. Montagem sem orientações (anexo ou texto') : null;
+                sem_anexos && sem_textos ? mensagens.push('Op. Montagem sem orientações (anexo ou texto): ' + servico.dataSolicitacao.dataInicio.replace(/\/\d\d\d\d/, "")) : null;
                 //sem_textos ? mensagens.push('Op. Montagem sem completo ou observações') : null;
 
             }
