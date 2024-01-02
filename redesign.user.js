@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Redesign Sistemas Sesc
 // @namespace    http://tampermonkey.net/
-// @version      23.6.20
+// @version      24.01.02
 // @description  try to take over the world!
 // @author       You
 // @require      http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js
@@ -16,30 +16,69 @@
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=org.br
 // ==/UserScript==
 
-(function() {
+(function () {
     'use strict';
 
-    waitForKeyElements (".textododca", actionFunction);
-    waitForKeyElements (".intrasesc-nav", ocultar);
-    waitForKeyElements (".page-header", ocultar);
-    waitForKeyElements ("#module-container > div > div > div.span10 > div:nth-child(2) > a", ajustarCalendario);
+    var fechado = false;
+
+    waitForKeyElements(".textododca", actionFunction);
+    waitForKeyElements(".intrasesc-nav", ocultar);
+    waitForKeyElements(".page-header", ocultar);
+    waitForKeyElements("#module-container > div > div > div.span10 > div:nth-child(2) > a", ajustarCalendario);
     //agenda-list
 
-    waitForKeyElements ("#container-btn-filtros", ocultar);
-    waitForKeyElements ("#agenda-box-informacoes", ocultar);
+    waitForKeyElements("#container-btn-filtros", ocultar);
+    waitForKeyElements("#agenda-box-informacoes", ocultar);
+    waitForKeyElements("#container-btn-filtros", ocultar);
+    waitForKeyElements("#module-container > div > div.row-fluid > div.span10 > div:nth-child(1)", ocultar);
 
-    function actionFunction (jNode) {
-        jNode.css ("width", "300pt");
-        jNode.css ("font-size", "12pt");
+    waitForKeyElements('.navbar-inner', (Element)=>{
+                //Edita Estilo do DIVs de ação
+                
+                let divs = $('.fc-event');
+                divs.css('border-radius', '5px');
+                divs.css('color', 'rgb(0 0 0 / 75%) "important');
+                document.body.style.background = 'f3f3f3';
+    })
+
+    //Oculta o filtro da agenda
+    waitForKeyElements("#container-filters-summary > div > div.box-title", toggleFilter);
+
+    function toggleFilter(jNode) {
+        // document.querySelector("#container-filters-summary > div > div.well.no-radius")
+        // #container-filters-summary > div > div.box-title
+        let d = $("#container-filters-summary > div > div.well.no-radius");
+        d.toggle();
+        jNode.on("click", function () {
+            d.toggle();
+        });
+    }
+    //waitForKeyElements ("#quadro-resumo-modal > div > div.modal-header > button > i", fechar);
+    //#quadro-resumo-modal > div > div.modal-header > button > i
+
+    function actionFunction(jNode) {
+        jNode.css("width", "300pt");
+        jNode.css("font-size", "12pt");
     }
 
-    function ajustarCalendario(jNode){
+    function ajustarCalendario(jNode) {
         //jNode.css("margin-top", "5em");
         $('#module-container > div > div > div.span10').css("margin-top", "5em");
     }
 
-        function ocultar (jNode) {
+    function ocultar(jNode) {
         jNode.hide();
+    }
+
+    function fechar(jNode) {
+        if (!fechado) {
+            jNode.click();
+            fechado = true;
+        }
+    }
+
+    //alert('Teste de versão ok, versão 2');
+})();
     }
 
     alert('Teste de versão ok, versão 2');    
