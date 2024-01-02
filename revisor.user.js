@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Verificador de Ação
 // @namespace    http://tampermonkey.net/
-// @version      23.12.30
+// @version      24.01.02
 // @description  Obtem dados para carta proposta e lança no clipboard
 // @author       You
 // @match        http://webapps.sorocaba.sescsp.org.br/siplan/*
@@ -11,7 +11,7 @@
 // @downloadURL https://github.com/melnic/siplus/raw/master/revisor.user.js
 // @updateURL   https://github.com/melnic/siplus/raw/master/revisor.user.js
 // @grant       GM_addStyle
-==/UserScript==
+// ==/UserScript==
 
 
 // MELHORIAS
