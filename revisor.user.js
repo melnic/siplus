@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Verificador de Ação
 // @namespace    http://tampermonkey.net/
-// @version      24.01.02
+// @version      24.01.03
 // @description  Obtem dados para carta proposta e lança no clipboard
 // @author       You
 // @match        http://webapps.sorocaba.sescsp.org.br/siplan/*
@@ -15,6 +15,8 @@
 
 
 // MELHORIAS
+// Verifica Justificativa de Aprovação
+// Verifica se tem sinopse Completa ou Texto Base
 // Oculta menu de navegação ao clicar na lista de mensagens
 // Verifica se horário de camarim está antecipado
 // Se estatístico está integrado
@@ -25,6 +27,7 @@
 // Se tem recomendação etária
 // Se tem derivação para cada e todos os setores
 // Se derivações estão consistentes com o local da ação, ignorando pedidos de Camarime Coffee
+// Facilitar fechamento de Quadro Resumo: click ou Esc
 
 var adress = window.location.href;
 var patt = /96\d{12}/i;
@@ -128,7 +131,15 @@ function verificarAcao() {
     //Inserir auto correção (função);
     //definir scroll para ponto de erro >> document.getElementById("divFirst").scrollIntoView();
     //inserir categoria de erro: crítico ou melhoria
-    // Estatístico está integrado?
+    
+    !resposta.sinopseCurta && !resposta.sinopseSimples
+        ? mensagens.push('Sem sinopse completa e texto base')
+        : nul;
+
+    !resposta.sinopseAprovacao
+        ? mensagens.push('Sem texto de justificativa')
+        : nul;
+
     !resposta.hasIntegracaoEstatistico ?
         mensagens.push('Estatístico não integrado') : null;
 
