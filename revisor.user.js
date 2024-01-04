@@ -134,7 +134,7 @@ function verificarAcao() {
     
     !resposta.sinopseCurta && !resposta.sinopseSimples
         ? mensagens.push('Sem sinopse completa e texto base')
-        : nul;
+        : null;
 
     !resposta.sinopseAprovacao
         ? mensagens.push('Sem texto de justificativa')
