@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Verificador de Ação
 // @namespace    http://tampermonkey.net/
-// @version      24.01.03
+// @version      24.01.09
 // @description  Obtem dados para carta proposta e lança no clipboard
 // @author       You
 // @match        http://webapps.sorocaba.sescsp.org.br/siplan/*
@@ -132,13 +132,13 @@ function verificarAcao() {
     //definir scroll para ponto de erro >> document.getElementById("divFirst").scrollIntoView();
     //inserir categoria de erro: crítico ou melhoria
     
-    !resposta.sinopseCurta && !resposta.sinopseSimples
-        ? mensagens.push('Sem sinopse completa e texto base')
-        : null;
+    resposta.sinopseCompleta || resposta.sinopseSimples
+        ? null
+        : mensagens.push('Sem sinopse completa e texto base');
 
     !resposta.sinopseAprovacao
         ? mensagens.push('Sem texto de justificativa')
-        : nul;
+        : null;
 
     !resposta.hasIntegracaoEstatistico ?
         mensagens.push('Estatístico não integrado') : null;
