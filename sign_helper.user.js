@@ -9,6 +9,8 @@
 // @require      https://gist.github.com/raw/2625891/waitForKeyElements.js
 // @require      https://raw.githubusercontent.com/jeresig/jquery.hotkeys/master/jquery.hotkeys.js
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=docusign.net
+// @downloadURL https://github.com/melnic/siplus/raw/master/sign_helper.user.js
+// @updateURL   https://github.com/melnic/siplus/raw/master/sign_helper.user.js
 // @grant        none
 // ==/UserScript==
 
