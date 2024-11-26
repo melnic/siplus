@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Scan Conflitos Espaços
 // @namespace    http://tampermonkey.net/
-// @version      23.12.17
+// @version      24.11.25
 // @description  Verificar Conflitos
 // @author       You
 // @match        http://webapps.sorocaba.sescsp.org.br/siplan/*
@@ -13,6 +13,8 @@
 // @grant       GM_addStyle
 // ==/UserScript==
 
+// icon set: https://www.w3schools.com/bootstrap/bootstrap_ref_comp_glyphs.asp
+
 //Próxima função Conflitos de Camarim
 //GET Com demandas para Alimentação
 // http://webapps.sorocaba.sescsp.org.br/siplan/api/atividade?start=03%2F07%2F2023&end=10%2F07%2F2023&lo=96000000000038&lo=96000000000039&lo=96000000000040&lo=96000000000041&lo=96000000000042&lo=96000000000043&lo=96000000000016&av=TODAS&servicos=ALIMENTACAO&_=1688601170817
@@ -22,6 +24,26 @@ const camarins_start = 'http://webapps.sorocaba.sescsp.org.br/siplan/api/ativida
 //start=26%2F06%2F2023&end=03%2F07%2F2023&
 const camarins = 'lo=96000000000038&lo=96000000000039&lo=96000000000040&lo=96000000000041&lo=96000000000042&lo=96000000000043&lo=96000000000016';
 const camarins_end = '&av=TODAS&servicos=ALIMENTACAO';
+
+$(document).bind('keydown', 'tab', function(){
+    toggleEvents();
+});
+
+// Função para alternar a visibilidade das divs
+function toggleEvents() {
+    // Seleciona todas as divs com a classe 'fc-event' que não possuem nem a classe 'conflito' nem a classe 'intervaloCurto'
+    const events = document.querySelectorAll('div.fc-event:not(.conflito):not(.intervaloCurto)');
+
+    // Itera sobre todos os eventos encontrados
+    events.forEach(event => {
+        // Alterna o estilo 'display' entre 'none' (oculto) e 'block' (visível)
+        if (event.style.display === 'none') {
+            event.style.display = 'block';
+        } else {
+            event.style.display = 'none';
+        }
+    });
+}
 
 //Inserir Funções para acionar quando carregar itens
 var resposta = '';
@@ -47,12 +69,40 @@ XMLHttpRequest.prototype.open = function(method, url, async) {
             haConflito = false;
 
             scanConflitos(resposta);
+            inserirBtnEventToggle();
             //alert(haConflito);
         });
     }
     //
     open.apply(this, arguments);
 };
+
+function inserirBtnEventToggle(){
+    
+    // Create the button element
+    const button = document.createElement('button');
+    button.classList.add('btn');
+    button.id = 'eventToggle';
+    
+    if(!document.getElementById('eventToggle')){// Create the <i> element inside the button
+        const icon = document.createElement('i');
+        icon.classList.add('icon-eye-open');
+        
+        // Append the icon to the button
+        button.appendChild(icon);
+        
+        // Find the container with the id 'agenda-btn-nav-container'
+        const container = document.getElementById('agenda-btn-nav-container');
+        
+        // Append the button to the container
+        container.appendChild(button);
+        
+        // Add a click event listener to the button
+        button.addEventListener('click', function() {
+            toggleEvents(); // Run the toggleEvents function when the button is clicked
+    });
+}
+}
 
 //Função para obter dados de Ações requisitando JSON
 var getJSON = function(url) {
@@ -71,6 +121,8 @@ var getJSON = function(url) {
     };
     xhr.send();
 };
+
+//Navegação por teclado
 
 function scanConflitos(d){
     dados = JSON.parse(d);
@@ -117,7 +169,6 @@ function inserirElemento(item, index, arr){
     item['inicio'] = converterParaData(item.start);
     item['fim'] = converterParaData(item.end);
 
-    //\[RS\]/.test(item.title) ? acoes_div[index].css({ 'opacity' : 0.3 }) : null;
     /\[RS\]/.test(item.title) ? $(acoes_div[index]).css({ 'opacity' : 0.3 }) : null;
 }
 
