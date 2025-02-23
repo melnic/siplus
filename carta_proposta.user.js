@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gerador de Carta Proposta
 // @namespace    http://tampermonkey.net/
-// @version      25.02.23
+// @version      23.12.23
 // @description  Obtem dados para carta proposta e lança no clipboard
 // @author       You
 // @match        http://webapps.sorocaba.sescsp.org.br/siplan/*
@@ -141,20 +141,6 @@ function applyStyles() {
     table.style.width = '100%';
     table.style.borderCollapse = 'collapse';
 
-    // // Style for table headers and cells
-    // const th = document.createElement('th');
-    // th.style.padding = '8px';
-    // th.style.border = '1px solid #ddd !Important';
-    // th.style.textAlign = 'left';
-    // th.style.backgroundColor = '#f2f2f2';
-
-    // const td = document.createElement('td');
-    // td.style.padding = '8px';
-    // td.style.border = '1px solid #ddd';
-    // td.style.textAlign = 'left';
-
-    // Injectando CSS
-    
     // Create a <style> element
     const styleElement = document.createElement('style');
 
@@ -195,7 +181,7 @@ function applyStyles() {
         }
 
         #floatingDiv td:nth-child(5) {
-          width: 8em;          
+          width: 9em;          
         }
 
         #floatingDiv td:nth-child(6) {
@@ -280,9 +266,6 @@ waitForKeyElements("#btn-export", inserirBotao);
 //Espera surgir Botão Cancelar para inserir 
 waitForKeyElements("#datas-list-container", createHover);
 
-    // // CALL HOVER FUNCTION
-    // createHover(); //apagar se bugar;
-
 var adress = window.location.href;
 var patt = /96\d{12}/i;
 var n_acao = patt.exec(adress);
@@ -296,25 +279,39 @@ const template_link = "ms-word:nft|u|https://sescsp.sharepoint.com/sites/NcleoAr
 // Endereço de calendário /siplan/api/atividade?start=08%2F05%2F2023&end=15%2F05%2F2023
 // URL de ação /siplan/api/atividade/96000309122407?
 
-var open = XMLHttpRequest.prototype.open;
-//alert('função foi injetada');
-XMLHttpRequest.prototype.open = function (method, url, async) {
-    //alert(url);
-    if (url.indexOf('api/atividade/96') !== -1) {
-        //alert('Solicitação obtida:', method, url);
+// Salva a função original 'open' do XMLHttpRequest
+var originalOpen = XMLHttpRequest.prototype.open;
 
-        // Adicionar observador de eventos para a resposta
-        this.addEventListener('load', function () {
-            resposta = JSON.parse(this.responseText);
-        });
+// Substitui a função 'open' por uma nova função
+XMLHttpRequest.prototype.open = function (method, url, async) {
+    // Verifica se a URL contém 'api/atividade/96'
+    
+    //Header de carregamento de dados de ação em aberura inicial
+    //api/atividade/96000355001285
+
+    //header de páginas de datas de derivações
+    //api//data-agenda/atividade/96000355001285
+
+    if (url.indexOf('api/atividade/96') !== -1) {
+        // Verifica se o método é GET ou PUT
+        if (method === 'GET' || method === 'PUT') {
+            console.log('Solicitação interceptada:', method, url);
+
+            // Adiciona um observador de eventos para a resposta
+            this.addEventListener('load', function () {
+                resposta = JSON.parse(this.responseText);
+                console.log('Resposta recebida:', resposta);
+            });
+
+            // Adiciona um observador de eventos para erros
+            this.addEventListener('error', function () {
+                console.error('Erro na requisição:', method, url);
+            });
+        }
     }
 
-    // Dados de Reload de Datas api//data-agenda/atividade/96000354543016
-    // Retorna Arra com datas de derivações aka servicos
-
-    //
-
-    open.apply(this, arguments);
+    // Chama a função original 'open' com os argumentos originais
+    originalOpen.apply(this, arguments);
 };
 
 //Função para obter dados de Ações
