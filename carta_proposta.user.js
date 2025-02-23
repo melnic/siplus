@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gerador de Carta Proposta
 // @namespace    http://tampermonkey.net/
-// @version      23.12.23
+// @version      25.02.23
 // @description  Obtem dados para carta proposta e lança no clipboard
 // @author       You
 // @match        http://webapps.sorocaba.sescsp.org.br/siplan/*
