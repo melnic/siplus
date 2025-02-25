@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gerador de Carta Proposta
 // @namespace    http://tampermonkey.net/
-// @version      23.12.23
+// @version      25.02.25
 // @description  Obtem dados para carta proposta e lança no clipboard
 // @author       You
 // @match        http://webapps.sorocaba.sescsp.org.br/siplan/*
@@ -21,6 +21,7 @@
 // 28/12 Trabalha com vários contratos
 // CTRL-Q Abre quadro-resumo
 // TAB retirar ações sem conflitos
+// Hover de dados de derivações
 
 //MELHORAR
 
@@ -285,7 +286,7 @@ var originalOpen = XMLHttpRequest.prototype.open;
 // Substitui a função 'open' por uma nova função
 XMLHttpRequest.prototype.open = function (method, url, async) {
     // Verifica se a URL contém 'api/atividade/96'
-    
+
     //Header de carregamento de dados de ação em aberura inicial
     //api/atividade/96000355001285
 
@@ -295,7 +296,7 @@ XMLHttpRequest.prototype.open = function (method, url, async) {
     if (url.indexOf('api/atividade/96') !== -1) {
         // Verifica se o método é GET ou PUT
         if (method === 'GET' || method === 'PUT') {
-            console.log('Solicitação interceptada:', method, url);
+            console.log('Dados Colatados:', method, url);
 
             // Adiciona um observador de eventos para a resposta
             this.addEventListener('load', function () {
@@ -348,10 +349,7 @@ $(document).bind('keydown', 'ctrl+/', function(){
 
 //Insere botão no caso de multiplos contratos na ação
 //Formato
-// menuItems = [
-//     { id: "btn-exclusao", text: "Excluir" },
-//     { id: "btn-quadro-resumo", text: "Quadro resumo" },
-// ]:
+
 function inserirBotaoCPs(dados) {
 
     // Create a new div element with class "btn-group"
