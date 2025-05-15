@@ -1,4 +1,3 @@
-Attribute VB_Name = "NewMacros"
 Public Sub FromClipboard()
 
 'Dim clipboard As DataObject
@@ -16,11 +15,11 @@ Dim dataObj As New MSForms.DataObject
         On Error GoTo 0
         Debug.Print ("Text saved from Clipboard: '" & strText & "'")
 
-' dividir texto em pares vari·vel-valor separados por "|"
+' dividir texto em pares vari√°vel-valor separados por "|"
 Dim pares As Variant
 pares = Split(texto, "|")
 
-' percorrer cada par vari·vel-valor e atribuir valores ‡s vari·veis correspondentes
+' percorrer cada par vari√°vel-valor e atribuir valores √†s vari√°veis correspondentes
 ' [titulo, contratado, datas, total, parcelas]
 Dim titulo As String
 Dim contratado As String
@@ -29,7 +28,7 @@ Dim total As String
 Dim parcelas As String
 Dim formato As String
 
-' Vari·veis do loop de ocultaÁıes
+' Vari√°veis do loop de oculta√ß√µes
 Dim allDocuments() As String
 Dim oneDocument() As String
 Dim i As Long
@@ -41,7 +40,7 @@ Dim encontrado As Boolean
 For Each par In pares
     Dim nome As String
     Dim valor As String
-    nome = Split(par, "=")(0) ' extrai o nome da vari·vel do par atual
+    nome = Split(par, "=")(0) ' extrai o nome da vari√°vel do par atual
     valor = Split(par, "=")(1) ' extrai o valor correspondente do par atual
     
     Select Case nome
@@ -63,7 +62,7 @@ Next
 ' Dados para Pagamento: quadro2_PF, quadro2_PJ
 ' Dados contratado: quadro3_PF, quadro3_PJ
 ' Dados PJ: quadro_representante_PJ
-' Formato da aÁ„o: formato
+' Formato da a√ß√£o: formato
 ' ecad, vinculo, sbat, drt, autoria_danca, seguro, art
 
 allDocuments = Split("ecad, vinculo, sbat, drt, autoria_danca, seguro, art", ", ")
@@ -73,8 +72,8 @@ allDocuments = Split("ecad, vinculo, sbat, drt, autoria_danca, seguro, art", ", 
     
     ' pf, circo, danca, intervencao, musica, oficina, teatro
     
-    promptText = "Escolha um tipo de carta:" & vbNewLine & "0. PF" & vbNewLine & "1. oficina" & vbNewLine & "2. danÁa" & vbNewLine & "3. intervencao / narraÁ„o / esportiva" & vbNewLine & "4. musica" & vbNewLine & "5. circo" & vbNewLine & "6. teatro"
-    result = InputBox(promptText, "Digitar n˙mero")
+    promptText = "Escolha um tipo de carta:" & vbNewLine & "0. PF" & vbNewLine & "1. oficina" & vbNewLine & "2. dan√ßa" & vbNewLine & "3. intervencao / narra√ß√£o / esportiva" & vbNewLine & "4. musica" & vbNewLine & "5. circo" & vbNewLine & "6. teatro"
+    result = InputBox(promptText, "Digitar n√∫mero")
     
     Select Case result
         Case 0
@@ -86,24 +85,24 @@ allDocuments = Split("ecad, vinculo, sbat, drt, autoria_danca, seguro, art", ", 
             ActiveDocument.Bookmarks("formato2").Range.Text = "oficina de"
         Case 2
             formato = "danca"
-            ActiveDocument.Bookmarks("formato").Range.Text = "apresentaÁ„o de danÁa"
-            ActiveDocument.Bookmarks("formato2").Range.Text = "apresentaÁ„o de danÁa"
+            ActiveDocument.Bookmarks("formato").Range.Text = "apresenta√ß√£o de dan√ßa"
+            ActiveDocument.Bookmarks("formato2").Range.Text = "apresenta√ß√£o de dan√ßa"
         Case 3
             formato = "intervencao"
-            ActiveDocument.Bookmarks("formato").Range.Text = "intervenÁ„o"
-            ActiveDocument.Bookmarks("formato2").Range.Text = "intervenÁ„o"
+            ActiveDocument.Bookmarks("formato").Range.Text = "interven√ß√£o"
+            ActiveDocument.Bookmarks("formato2").Range.Text = "interven√ß√£o"
         Case 4
             formato = "musica"
-            ActiveDocument.Bookmarks("formato").Range.Text = "apresentaÁ„o de m˙sica"
-            ActiveDocument.Bookmarks("formato2").Range.Text = "apresentaÁ„o de m˙sica"
+            ActiveDocument.Bookmarks("formato").Range.Text = "apresenta√ß√£o de m√∫sica"
+            ActiveDocument.Bookmarks("formato2").Range.Text = "apresenta√ß√£o de m√∫sica"
         Case 5
             formato = "circo"
-            ActiveDocument.Bookmarks("formato").Range.Text = "apresentaÁ„o de circo"
-            ActiveDocument.Bookmarks("formato2").Range.Text = "apresentaÁ„o de circo"
+            ActiveDocument.Bookmarks("formato").Range.Text = "apresenta√ß√£o de circo"
+            ActiveDocument.Bookmarks("formato2").Range.Text = "apresenta√ß√£o de circo"
         Case 6
             formato = "teatro"
-            ActiveDocument.Bookmarks("formato").Range.Text = "apresentaÁ„o de teatro"
-            ActiveDocument.Bookmarks("formato2").Range.Text = "apresentaÁ„o de teatro"
+            ActiveDocument.Bookmarks("formato").Range.Text = "apresenta√ß√£o de teatro"
+            ActiveDocument.Bookmarks("formato2").Range.Text = "apresenta√ß√£o de teatro"
 
     End Select
 
@@ -145,7 +144,7 @@ End Select
 
 ' oneDocument = Split("ecad, vinculo, drt", ",")
 
-' Verifica se os valores da matriz1 n„o est„o presentes na matriz2
+' Verifica se os valores da matriz1 n√£o est√£o presentes na matriz2
 
 If Not formato = "PF" Then
     For i = LBound(allDocuments) To UBound(allDocuments)
@@ -164,8 +163,8 @@ If Not formato = "PF" Then
     ActiveDocument.Bookmarks("quadro3_PF").Range.Font.Hidden = True
 End If
 
-' Insere dados da aÁ„o puxados do Siplan e copiados no Clipboard
-' Inserir dados no cabeÁalho da carta proposta
+' Insere dados da a√ß√£o puxados do Siplan e copiados no Clipboard
+' Inserir dados no cabe√ßalho da carta proposta
 
     If Not formato = "musica" Then
         ActiveDocument.Bookmarks("titulo_acao").Range.Text = titulo
@@ -180,7 +179,7 @@ End If
     ActiveDocument.Bookmarks("total").Range.Text = total
     ActiveDocument.Bookmarks("parcelas").Range.Text = parcelas
     
-    ' Insere dados da DeclaraÁ„o de VÌnculo
+    ' Insere dados da Declara√ß√£o de V√≠nculo
     ActiveDocument.Bookmarks("titulo_vinculo").Range.Text = titulo
     ActiveDocument.Bookmarks("datas_vinculo").Range.Text = datas
     
@@ -189,4 +188,3 @@ End If
     End If
 
 End Sub
-
