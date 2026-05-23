@@ -1,9 +1,9 @@
 {
   "datas": [
-    { "data": "2026-09-07", "tipo": "unidade-fechada", "descricao": "Independência do Brasil" },
-    { "data": "2026-09-08", "tipo": "feriado-unidade-aberta", "descricao": "Ponto Facultativo" },
-    { "data": "2026-10-12", "tipo": "unidade-fechada", "descricao": "Nossa Senhora Aparecida" },
-    { "data": "2026-11-02", "tipo": "feriado-unidade-aberta", "descricao": "Finados" },
+    { "data": "2026-09-07", "tipo": "aberta", "descricao": "Independência do Brasil" },
+    { "data": "2026-09-08", "tipo": "fechada", "descricao": "Ponto Facultativo" },
+    { "data": "2026-10-12", "tipo": "fechada", "descricao": "Nossa Senhora Aparecida" },
+    { "data": "2026-11-02", "tipo": "fechada", "descricao": "Finados" },
     { "data": "2026-11-15", "tipo": "fechada", "descricao": "Proclamação da República" },
     { "data": "2026-12-25", "tipo": "fechada", "descricao": "Natal" }
   ]
