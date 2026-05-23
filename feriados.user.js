@@ -1,237 +1,279 @@
 // ==UserScript==
-// @name         SIPLAN - Pintar Feriados (Mês + Semana)
+// @name         SIPLAN - Pintar Feriados no Calendário
 // @namespace    http://tampermonkey.net/
-// @version      3.0
-// @description  Pinta as células do calendário MÊS e SEMANA no SIPLAN
-// @author       Você
+// @version      1.0
+// @description  Pinta as células do calendário SIPLAN com base nos feriados carregados do JSON
+// @author       SeuNome
 // @match        http://webapps.sorocaba.sescsp.org.br/siplan/*
 // @match        https://webapps.sorocaba.sescsp.org.br/siplan/*
 // @grant        GM_xmlhttpRequest
-// @grant        GM_addStyle
 // @connect      raw.githubusercontent.com
-// @run-at       document-idle
+// @run-at       document-end
 // ==/UserScript==
 
 (function() {
     'use strict';
 
-    const JSON_URL = 'https://raw.githubusercontent.com/melnic/siplus/refs/heads/master/feriados.json';
-
+    // Configurações
+    const FERIADOS_URL = 'https://raw.githubusercontent.com/melnic/siplus/refs/heads/master/feriados.json';
     const CORES = {
-        'unidade-fechada': '#797979',      // cinza
-        'feriado-unidade-aberta': '#64e1b9' // azul/verde claro
+        'fechada': {
+            backgroundColor: '#ffcccc',
+            borderColor: '#ff0000',
+            titleColor: '#cc0000'
+        },
+        'aberta': {
+            backgroundColor: '#ffffcc',
+            borderColor: '#ffcc00',
+            titleColor: '#cc9900'
+        }
     };
 
-    let datasEspeciais = {};
-    let timeoutRepaint = null;
+    // Cache dos feriados
+    let feriadosCache = null;
+    let isLoading = false;
 
-    // ============================================
-    // BUSCAR FERIADOS
-    // ============================================
-    function buscarFeriados() {
+    // Função para carregar feriados
+    function carregarFeriados() {
         return new Promise((resolve, reject) => {
+            if (feriadosCache) {
+                resolve(feriadosCache);
+                return;
+            }
+
+            if (isLoading) {
+                const interval = setInterval(() => {
+                    if (feriadosCache) {
+                        clearInterval(interval);
+                        resolve(feriadosCache);
+                    }
+                }, 100);
+                return;
+            }
+
+            isLoading = true;
+
             GM_xmlhttpRequest({
                 method: 'GET',
-                url: JSON_URL,
+                url: FERIADOS_URL,
                 onload: function(response) {
+                    isLoading = false;
                     if (response.status === 200) {
                         try {
-                            const dados = JSON.parse(response.responseText);
-                            if (dados && dados.datas) {
-                                for (let item of dados.datas) {
-                                    datasEspeciais[item.data] = {
-                                        tipo: item.tipo,
-                                        descricao: item.descricao || (item.tipo === 'unidade-fechada' ? '🔒 Unidade Fechada' : '📅 Feriado')
-                                    };
-                                }
-                                console.log(`[Feriados] ✅ ${Object.keys(datasEspeciais).length} datas carregadas`);
-                                resolve(true);
-                            } else {
-                                reject(new Error('JSON inválido'));
-                            }
-                        } catch(e) {
+                            const data = JSON.parse(response.responseText);
+                            feriadosCache = data.datas || [];
+                            console.log(`[SIPLAN Feriados] Carregados ${feriadosCache.length} feriados`);
+                            resolve(feriadosCache);
+                        } catch (e) {
+                            console.error('[SIPLAN Feriados] Erro ao parsear JSON:', e);
                             reject(e);
                         }
                     } else {
+                        console.error('[SIPLAN Feriados] Erro ao carregar:', response.status);
                         reject(new Error(`HTTP ${response.status}`));
                     }
                 },
-                onerror: reject
+                onerror: function(error) {
+                    isLoading = false;
+                    console.error('[SIPLAN Feriados] Erro na requisição:', error);
+                    reject(error);
+                }
             });
         });
     }
 
-    // ============================================
-    // PINTAR CÉLULAS (funciona para MÊS e SEMANA)
-    // ============================================
-    function pintarCelulas() {
-        if (Object.keys(datasEspeciais).length === 0) return;
+    // Função para obter feriado de uma data específica
+    function obterFeriado(data) {
+        if (!feriadosCache) return null;
+        return feriadosCache.find(f => f.data === data);
+    }
 
-        // Busca TODAS as células com data-date (funciona para mês e semana)
-        const todasCelulas = document.querySelectorAll('td[data-date]');
+    // Função para pintar uma célula
+    function pintarCelula(cell, feriado) {
+        if (!feriado) return;
 
-        if (todasCelulas.length === 0) {
-            console.log('[Feriados] Nenhuma célula com data-date encontrada');
-            return;
+        const cor = CORES[feriado.tipo];
+        if (!cor) return;
+
+        // Salvar estilo original para poder restaurar depois (se necessário)
+        if (!cell.hasAttribute('data-original-bg')) {
+            cell.setAttribute('data-original-bg', cell.style.backgroundColor || '');
         }
 
-        let celulasPintadas = 0;
-        const isMonthView = document.querySelector('.fc-view-month')?.offsetParent !== null;
+        // Aplicar estilos
+        cell.style.backgroundColor = cor.backgroundColor;
+        cell.style.borderColor = cor.borderColor;
+        cell.style.border = `1px solid ${cor.borderColor}`;
 
-        for (let cell of todasCelulas) {
-            const dataStr = cell.getAttribute('data-date');
+        // Pintar o número do dia
+        const dayNumber = cell.querySelector('.fc-day-number');
+        if (dayNumber) {
+            dayNumber.style.color = cor.titleColor;
+            dayNumber.style.fontWeight = 'bold';
+        }
 
-            if (dataStr && datasEspeciais[dataStr]) {
-                const info = datasEspeciais[dataStr];
-                const cor = CORES[info.tipo];
+        // Adicionar tooltip com a descrição do feriado
+        cell.setAttribute('title', feriado.descricao);
+        cell.setAttribute('data-feriado', feriado.tipo);
+        cell.setAttribute('data-feriado-desc', feriado.descricao);
 
-                if (cor) {
-                    // Pinta a célula td
-                    cell.style.setProperty('background-color', cor, 'important');
-                    cell.style.transition = 'background-color 0.2s ease';
+        // Adicionar classe para identificação
+        cell.classList.add('feriado-pintado');
+        cell.classList.add(`feriado-${feriado.tipo}`);
 
-                    // Adiciona tooltip
-                    cell.setAttribute('title', info.descricao);
-                    cell.classList.add('data-feriado');
+        // Se for feriado fechado, adicionar ícone de cadeado
+        if (feriado.tipo === 'fechada') {
+            adicionarIconeCadeado(cell);
+        }
+    }
 
-                    // Adiciona indicador 🔒 apenas na visualização de mês
-                    if (isMonthView && info.tipo === 'unidade-fechada') {
-                        const dayNumber = cell.querySelector('.fc-day-number');
-                        if (dayNumber && !dayNumber.querySelector('.lock-icon')) {
-                            const lock = document.createElement('span');
-                            lock.textContent = ' 🔒';
-                            lock.className = 'lock-icon';
-                            lock.style.fontSize = '10px';
-                            lock.style.opacity = '0.7';
-                            dayNumber.appendChild(lock);
+    // Função para adicionar ícone de cadeado
+    function adicionarIconeCadeado(cell) {
+        const dayNumber = cell.querySelector('.fc-day-number');
+        if (dayNumber && !dayNumber.querySelector('.lock')) {
+            const lockIcon = document.createElement('span');
+            lockIcon.className = 'lock';
+            lockIcon.textContent = ' 🔒';
+            lockIcon.style.fontSize = '12px';
+            lockIcon.title = 'Unidade fechada';
+            dayNumber.appendChild(lockIcon);
+        }
+    }
+
+    // Função principal para processar todas as células
+    async function processarCelulas() {
+        try {
+            await carregarFeriados();
+
+            const cells = document.querySelectorAll('td[data-date]');
+            let count = 0;
+
+            cells.forEach(cell => {
+                const data = cell.getAttribute('data-date');
+                const feriado = obterFeriado(data);
+                if (feriado) {
+                    pintarCelula(cell, feriado);
+                    count++;
+                }
+            });
+
+            if (count > 0) {
+                console.log(`[SIPLAN Feriados] ${count} células pintadas com feriados`);
+            }
+        } catch (error) {
+            console.error('[SIPLAN Feriados] Erro ao processar células:', error);
+        }
+    }
+
+    // Função para adicionar estilos CSS
+    function adicionarEstilos() {
+        const style = document.createElement('style');
+        style.textContent = `
+            .feriado-pintado {
+                transition: background-color 0.2s;
+            }
+            .feriado-pintado:hover {
+                filter: brightness(0.95);
+                cursor: help;
+            }
+            .feriado-fechada {
+                background-color: #ffcccc !important;
+            }
+            .feriado-aberta {
+                background-color: #ffffcc !important;
+            }
+            .lock {
+                display: inline-block;
+                margin-left: 2px;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    // MutationObserver para detectar mudanças no DOM
+    function observarMudancas() {
+        const observer = new MutationObserver((mutations) => {
+            // Verificar se alguma célula foi adicionada ou removida
+            let deveProcessar = false;
+
+            for (const mutation of mutations) {
+                if (mutation.type === 'childList') {
+                    // Verificar se há células adicionadas
+                    const cellsAdicionadas = mutation.addedNodes.length > 0;
+                    if (cellsAdicionadas) {
+                        // Verificar se as células adicionadas são células do calendário
+                        for (const node of mutation.addedNodes) {
+                            if (node.nodeType === Node.ELEMENT_NODE) {
+                                if (node.matches && (node.matches('td[data-date]') || node.querySelector('td[data-date]'))) {
+                                    deveProcessar = true;
+                                    break;
+                                }
+                            }
                         }
                     }
-
-                    celulasPintadas++;
+                } else if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+                    // Se o estilo de uma célula foi modificado, podemos precisar reaplicar
+                    const target = mutation.target;
+                    if (target.matches && target.matches('td[data-date]')) {
+                        const data = target.getAttribute('data-date');
+                        const feriado = obterFeriado(data);
+                        if (feriado && !target.classList.contains('feriado-pintado')) {
+                            pintarCelula(target, feriado);
+                        }
+                    }
                 }
             }
-        }
 
-        if (celulasPintadas > 0) {
-            console.log(`[Feriados] 🎨 ${celulasPintadas} células pintadas`);
-        }
+            if (deveProcessar) {
+                setTimeout(processarCelulas, 100);
+            }
+        });
+
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true,
+            attributes: true,
+            attributeFilter: ['style', 'class']
+        });
+
+        return observer;
     }
 
-    // ============================================
-    // LIMPAR PINTURA
-    // ============================================
-    function limparPintura() {
-        const cells = document.querySelectorAll('.data-feriado');
-        for (let cell of cells) {
-            cell.style.removeProperty('background-color');
-            cell.classList.remove('data-feriado');
-            cell.removeAttribute('title');
-            const lock = cell.querySelector('.lock-icon');
-            if (lock) lock.remove();
+    // Inicialização
+    function init() {
+        adicionarEstilos();
+        processarCelulas();
+        observarMudancas();
+
+        // Adicionar evento para quando o calendário mudar de mês
+        document.addEventListener('click', (e) => {
+            const btnPrev = document.getElementById('btn-prev');
+            const btnNext = document.getElementById('btn-next');
+
+            if (e.target === btnPrev || e.target === btnNext ||
+                e.target.parentElement === btnPrev || e.target.parentElement === btnNext) {
+                setTimeout(processarCelulas, 300);
+            }
+        });
+
+        // Observar mudanças nos selects de mês/ano
+        const selectMes = document.getElementById('select-month');
+        const selectAno = document.getElementById('select-year');
+
+        if (selectMes) {
+            selectMes.addEventListener('change', () => setTimeout(processarCelulas, 300));
         }
+        if (selectAno) {
+            selectAno.addEventListener('change', () => setTimeout(processarCelulas, 300));
+        }
+
+        console.log('[SIPLAN Feriados] User script inicializado');
     }
 
-    // ============================================
-    // REPAINT
-    // ============================================
-    function forcarRepaint() {
-        if (timeoutRepaint) clearTimeout(timeoutRepaint);
-        timeoutRepaint = setTimeout(() => {
-            limparPintura();
-            pintarCelulas();
-        }, 150);
+    // Aguardar o DOM estar completamente carregado
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
     }
-
-    // ============================================
-    // OBSERVAR MUDANÇAS
-    // ============================================
-    function observarMudancas() {
-        // Botões de visualização
-        ['btn-dia-view', 'btn-semana-view', 'btn-mes-view'].forEach(id => {
-            const btn = document.getElementById(id);
-            if (btn) btn.addEventListener('click', () => setTimeout(forcarRepaint, 200));
-        });
-
-        // Navegação
-        ['btn-prev', 'btn-next'].forEach(id => {
-            const btn = document.getElementById(id);
-            if (btn) btn.addEventListener('click', forcarRepaint);
-        });
-
-        // Selects
-        ['select-month', 'select-year'].forEach(id => {
-            const select = document.getElementById(id);
-            if (select) select.addEventListener('change', forcarRepaint);
-        });
-
-        // Botões de meses rápidos
-        document.querySelectorAll('.btn-mes-rapido').forEach(btn => {
-            btn.addEventListener('click', forcarRepaint);
-        });
-
-        // MutationObserver
-        const target = document.getElementById('full-calendar-content');
-        if (target) {
-            const observer = new MutationObserver(() => forcarRepaint());
-            observer.observe(target, { childList: true, subtree: true });
-            console.log('[Feriados] 👁️ Observer ativo');
-        }
-    }
-
-    // ============================================
-    // INICIALIZAÇÃO
-    // ============================================
-    function aguardarInicializacao() {
-        return new Promise((resolve) => {
-            let tentativas = 0;
-            const interval = setInterval(() => {
-                const hasCells = document.querySelector('td[data-date]');
-                if (hasCells || tentativas > 30) {
-                    clearInterval(interval);
-                    resolve();
-                }
-                tentativas++;
-            }, 500);
-        });
-    }
-
-    // ============================================
-    // ESTILOS
-    // ============================================
-    GM_addStyle(`
-        .data-feriado {
-            transition: background-color 0.2s ease;
-        }
-        .data-feriado:hover {
-            filter: brightness(0.95);
-            cursor: help;
-        }
-        .lock-icon {
-            display: inline-block;
-            margin-left: 2px;
-        }
-    `);
-
-    // ============================================
-    // INÍCIO
-    // ============================================
-    console.log('[Feriados] 🚀 Iniciando...');
-    console.log(`[Feriados] 📋 JSON URL: ${JSON_URL}`);
-
-    buscarFeriados()
-        .then(async () => {
-            await aguardarInicializacao();
-            observarMudancas();
-            setTimeout(pintarCelulas, 500);
-        })
-        .catch(err => {
-            console.error('[Feriados] ❌ Erro:', err.message);
-            console.log('[Feriados] ⚠️ Exemplo do JSON esperado:');
-            console.log(JSON.stringify({
-                "datas": [
-                    { "data": "2026-09-07", "tipo": "feriado-unidade-aberta", "descricao": "Independência do Brasil" },
-                    { "data": "2026-09-08", "tipo": "unidade-fechada", "descricao": "Ponto Facultativo" }
-                ]
-            }, null, 2));
-        });
 })();
