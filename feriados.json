@@ -1,6 +1,7 @@
 {
   "datas": [
-    { "data": "2026-09-07", "tipo": "unidade-fechada", "descricao": "Independência do Brasil" },
+    { "data": "2026-09-07", "tipo": "feriado-unidade-aberta", "descricao": "Independência do Brasil" },
+    { "data": "2026-09-08", "tipo": "unidade-fechada", "descricao": "Independência do Brasil" },
     { "data": "2026-10-12", "tipo": "unidade-fechada", "descricao": "Nossa Senhora Aparecida" },
     { "data": "2026-11-02", "tipo": "unidade-fechada", "descricao": "Finados" },
     { "data": "2026-01-25", "tipo": "feriado-unidade-aberta", "descricao": "Aniversário de São Paulo" }
