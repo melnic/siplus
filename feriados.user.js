@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SIPLAN - Pintar Feriados no Calendário
 // @namespace    http://tampermonkey.net/
-// @version      1.3
+// @version      1.3.1
 // @description  Pinta as células do calendário SIPLAN com base nos feriados
 // @match        http://webapps.sorocaba.sescsp.org.br/siplan/*
 // @match        https://webapps.sorocaba.sescsp.org.br/siplan/*
@@ -25,9 +25,10 @@
         
         { "data": "2027-02-08", "tipo": "aberta", "descricao": "Carnaval \n UO Aberta" },
         { "data": "2027-02-09", "tipo": "aberta", "descricao": "Carnaval \n UO Aberta" },
-        { "data": "2027-02-10", "tipo": "aberta", "descricao": "Cinzas \n UO Fechada" },
+        { "data": "2027-02-10", "tipo": "fechada", "descricao": "Cinzas \n UO Fechada" },
         { "data": "2027-04-21", "tipo": "aberta", "descricao": "Tiradentes \n UO Aberta" },
         { "data": "2027-05-27", "tipo": "aberta", "descricao": "Corpus Christi \n UO Aberta" },
+        { "data": "2027-07-09", "tipo": "aberta", "descricao": "Revolução Constitucionalista \n UO Aberta" },
         { "data": "2027-09-07", "tipo": "aberta", "descricao": "Independência \n UO Aberta" },
         { "data": "2027-10-12", "tipo": "aberta", "descricao": "Nossa Senhora \n UO Aberta" },        
         { "data": "2027-11-02", "tipo": "aberta", "descricao": "Finados \n UO Aberta" },
