@@ -5,6 +5,8 @@
 // @description  Pinta as células do calendário SIPLAN com base nos feriados
 // @match        http://webapps.sorocaba.sescsp.org.br/siplan/*
 // @match        https://webapps.sorocaba.sescsp.org.br/siplan/*
+// @downloadURL https://github.com/melnic/siplus/raw/refs/heads/master/feriados.user.js
+// @updateURL   https://github.com/melnic/siplus/raw/refs/heads/master/feriados.user.js
 // @run-at       document-end
 // ==/UserScript==
 
