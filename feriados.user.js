@@ -18,14 +18,14 @@
     const FERIADOS_URL = 'https://raw.githubusercontent.com/melnic/siplus/refs/heads/master/feriados.json';
     const CORES = {
         'fechada': {
-            backgroundColor: '#ffcccc',
-            borderColor: '#ff0000',
-            titleColor: '#cc0000'
+            backgroundColor: '#4b4b4b',
+            borderColor: '#770000',
+            titleColor: '#570000'
         },
         'aberta': {
-            backgroundColor: '#ffffcc',
-            borderColor: '#ffcc00',
-            titleColor: '#cc9900'
+            backgroundColor: '#5ce4dd',
+            borderColor: '#2503a0',
+            titleColor: '#0047cc'
         }
     };
 
