@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SIPLAN - Pintar Feriados no Calendário
 // @namespace    http://tampermonkey.net/
-// @version      1.3.3
+// @version      1.3.5
 // @description  Pinta as células do calendário SIPLAN com base nos feriados
 // @match        http://webapps.sorocaba.sescsp.org.br/siplan/*
 // @match        https://webapps.sorocaba.sescsp.org.br/siplan/*
@@ -13,32 +13,31 @@
 (function() {
     'use strict';
 
-    // Feriados embutidos diretamente no script (evita problemas de rede)
+    // Feriados no formato brasileiro (DD/MM/AAAA)
     const FERIADOS = [
-        { "data": "2026-06-04", "tipo": "aberta", "descricao": "Corpus Christi \n UO Aberta" },
-        { "data": "2026-08-15", "tipo": "aberta", "descricao": "Aniversário de Sorocaba \n UO Aberta" },
-        { "data": "2026-07-09", "tipo": "aberta", "descricao": "Revolução Constitucionalista \n UO Aberta" },        
-        
-        
-        { "data": "2026-09-07", "tipo": "aberta", "descricao": "Independência do Brasil \n UO Aberta" },
-        { "data": "2026-09-08", "tipo": "fechada", "descricao": "Independência do Brasil \n UO Fechada" },
-        { "data": "2026-10-12", "tipo": "aberta", "descricao": "Nossa Senhora Aparecida \n UO Aberta" },
-        { "data": "2026-10-13", "tipo": "fechada", "descricao": "Nossa Senhora Aparecida \n UO Fechada" },
-        { "data": "2026-11-02", "tipo": "aberta", "descricao": "Finados \n UO Aberta" },
-        { "data": "2026-11-03", "tipo": "fechada", "descricao": "Finados \n UO Fechada" },
-        { "data": "2026-11-20", "tipo": "aberta", "descricao": "Consciência Negra \n UO Aberta" },        
-        
-        { "data": "2027-02-08", "tipo": "aberta", "descricao": "Carnaval \n UO Aberta" },
-        { "data": "2027-02-09", "tipo": "aberta", "descricao": "Carnaval \n UO Aberta" },
-        { "data": "2027-02-10", "tipo": "fechada", "descricao": "Cinzas \n UO Fechada" },
-        { "data": "2027-04-21", "tipo": "aberta", "descricao": "Tiradentes \n UO Aberta" },
-        { "data": "2027-05-27", "tipo": "aberta", "descricao": "Corpus Christi \n UO Aberta" },
-        { "data": "2027-07-09", "tipo": "aberta", "descricao": "Revolução Constitucionalista \n UO Aberta" },
-        { "data": "2027-09-07", "tipo": "aberta", "descricao": "Independência \n UO Aberta" },
-        { "data": "2027-10-12", "tipo": "aberta", "descricao": "Nossa Senhora \n UO Aberta" },        
-        { "data": "2027-11-02", "tipo": "aberta", "descricao": "Finados \n UO Aberta" },
-        { "data": "2027-11-15", "tipo": "aberta", "descricao": "República \n UO Aberta" },
-        { "data": "2027-11-16", "tipo": "fechada", "descricao": "República \n UO Aberta" }
+        { "data": "04/06/2026", "tipo": "aberta", "descricao": "Corpus Christi \n UO Aberta" },
+        { "data": "09/07/2026", "tipo": "aberta", "descricao": "Revolução Constitucionalista \n UO Aberta" },
+        { "data": "15/08/2026", "tipo": "aberta", "descricao": "Aniversário de Sorocaba \n UO Aberta" },
+
+        { "data": "07/09/2026", "tipo": "aberta", "descricao": "Independência do Brasil \n UO Aberta" },
+        { "data": "08/09/2026", "tipo": "fechada", "descricao": "Independência do Brasil \n UO Fechada" },
+        { "data": "12/10/2026", "tipo": "aberta", "descricao": "Nossa Senhora Aparecida \n UO Aberta" },
+        { "data": "13/10/2026", "tipo": "fechada", "descricao": "Nossa Senhora Aparecida \n UO Fechada" },
+        { "data": "02/11/2026", "tipo": "aberta", "descricao": "Finados \n UO Aberta" },
+        { "data": "03/11/2026", "tipo": "fechada", "descricao": "Finados \n UO Fechada" },
+        { "data": "20/11/2026", "tipo": "aberta", "descricao": "Consciência Negra \n UO Aberta" },
+
+        { "data": "08/02/2027", "tipo": "aberta", "descricao": "Carnaval \n UO Aberta" },
+        { "data": "09/02/2027", "tipo": "aberta", "descricao": "Carnaval \n UO Aberta" },
+        { "data": "10/02/2027", "tipo": "fechada", "descricao": "Cinzas \n UO Fechada" },
+        { "data": "21/04/2027", "tipo": "aberta", "descricao": "Tiradentes \n UO Aberta" },
+        { "data": "27/05/2027", "tipo": "aberta", "descricao": "Corpus Christi \n UO Aberta" },
+        { "data": "09/07/2027", "tipo": "aberta", "descricao": "Revolução Constitucionalista \n UO Aberta" },
+        { "data": "07/09/2027", "tipo": "aberta", "descricao": "Independência \n UO Aberta" },
+        { "data": "12/10/2027", "tipo": "aberta", "descricao": "Nossa Senhora \n UO Aberta" },
+        { "data": "02/11/2027", "tipo": "aberta", "descricao": "Finados \n UO Aberta" },
+        { "data": "15/11/2027", "tipo": "aberta", "descricao": "República \n UO Aberta" },
+        { "data": "16/11/2027", "tipo": "fechada", "descricao": "República \n UO Aberta" }
     ];
 
     const CORES = {
@@ -54,9 +53,48 @@
         }
     };
 
-    // Função para obter feriado de uma data específica
-    function obterFeriado(data) {
-        return FERIADOS.find(f => f.data === data);
+    // Função para converter data do formato brasileiro (DD/MM/AAAA) para ISO (AAAA-MM-DD)
+    function converterDataParaISO(dataBR) {
+        if (!dataBR) return null;
+
+        // Verifica se já está no formato ISO
+        if (dataBR.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            return dataBR;
+        }
+
+        // Converte de DD/MM/AAAA para AAAA-MM-DD
+        const partes = dataBR.split('/');
+        if (partes.length === 3) {
+            const dia = partes[0].padStart(2, '0');
+            const mes = partes[1].padStart(2, '0');
+            const ano = partes[2];
+            return `${ano}-${mes}-${dia}`;
+        }
+
+        return dataBR;
+    }
+
+    // Função para converter data do formato ISO para brasileiro (para debug)
+    function converterDataParaBR(dataISO) {
+        if (!dataISO) return null;
+        const partes = dataISO.split('-');
+        if (partes.length === 3) {
+            return `${partes[2]}/${partes[1]}/${partes[0]}`;
+        }
+        return dataISO;
+    }
+
+    // Pré-converte as datas dos feriados para ISO (mantém o original para referência)
+    const FERIADOS_ISO = FERIADOS.map(feriado => ({
+        ...feriado,
+        dataISO: converterDataParaISO(feriado.data),
+        dataOriginal: feriado.data  // Mantém o formato original para debug
+    }));
+
+    // Função para obter feriado de uma data específica (agora a data do calendário está em ISO)
+    function obterFeriado(dataISO) {
+        const feriado = FERIADOS_ISO.find(f => f.dataISO === dataISO);
+        return feriado;
     }
 
     // Função para pintar uma célula
@@ -106,8 +144,8 @@
         let count = 0;
 
         cells.forEach(cell => {
-            const data = cell.getAttribute('data-date');
-            const feriado = obterFeriado(data);
+            const dataISO = cell.getAttribute('data-date');
+            const feriado = obterFeriado(dataISO);
             if (feriado) {
                 pintarCelula(cell, feriado);
                 count++;
@@ -116,6 +154,19 @@
 
         if (count > 0) {
             console.log(`[SIPLAN Feriados] ${count} células pintadas com feriados`);
+
+            // Debug: Mostrar os feriados do mês atual (opcional)
+            if (count > 0 && cells.length > 0) {
+                const primeiroDia = cells[0].getAttribute('data-date');
+                if (primeiroDia) {
+                    const mesAno = primeiroDia.substring(0, 7);
+                    const feriadosMes = FERIADOS_ISO.filter(f => f.dataISO.startsWith(mesAno));
+                    if (feriadosMes.length > 0) {
+                        console.log(`[SIPLAN Feriados] Feriados em ${mesAno}:`,
+                            feriadosMes.map(f => `${converterDataParaBR(f.dataISO)} (${f.tipo})`).join(', '));
+                    }
+                }
+            }
         }
     }
 
@@ -193,6 +244,7 @@
         if (selectAno) selectAno.addEventListener('change', () => setTimeout(processarCelulas, 300));
 
         console.log('[SIPLAN Feriados] User script inicializado com sucesso!');
+        console.log('[SIPLAN Feriados] Usando formato de data brasileiro (DD/MM/AAAA)');
     }
 
     // Aguardar o DOM estar completamente carregado
