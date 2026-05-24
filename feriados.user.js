@@ -16,7 +16,7 @@
     // Feriados embutidos diretamente no script (evita problemas de rede)
     const FERIADOS = [
         { "data": "2026-06-04", "tipo": "aberta", "descricao": "Corpus Christi \n UO Aberta" },
-        { "data": "2026-15-08", "tipo": "aberta", "descricao": "Aniversário de Sorocaba \n UO Aberta" },
+        { "data": "2026-08-15", "tipo": "aberta", "descricao": "Aniversário de Sorocaba \n UO Aberta" },
         { "data": "2026-07-09", "tipo": "aberta", "descricao": "Revolução Constitucionalista \n UO Aberta" },        
         
         
