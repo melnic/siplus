@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SIPLAN - Pintar Feriados no Calendário
 // @namespace    http://tampermonkey.net/
-// @version      1.3.5
+// @version      1.4.1
 // @description  Pinta as células do calendário SIPLAN com base nos feriados
 // @match        http://webapps.sorocaba.sescsp.org.br/siplan/*
 // @match        https://webapps.sorocaba.sescsp.org.br/siplan/*
@@ -15,29 +15,29 @@
 
     // Feriados no formato brasileiro (DD/MM/AAAA)
     const FERIADOS = [
-        { "data": "04/06/2026", "tipo": "aberta", "descricao": "Corpus Christi \n UO Aberta" },
-        { "data": "09/07/2026", "tipo": "aberta", "descricao": "Revolução Constitucionalista \n UO Aberta" },
-        { "data": "15/08/2026", "tipo": "aberta", "descricao": "Aniversário de Sorocaba \n UO Aberta" },
+        { "data": "04/06/2026", "tipo": "aberta", "descricao": "Corpus Christi" },
+        { "data": "09/07/2026", "tipo": "aberta", "descricao": "Revolução Constitucionalista" },
+        { "data": "15/08/2026", "tipo": "aberta", "descricao": "Aniversário de Sorocaba" },
 
-        { "data": "07/09/2026", "tipo": "aberta", "descricao": "Independência do Brasil \n UO Aberta" },
-        { "data": "08/09/2026", "tipo": "fechada", "descricao": "Independência do Brasil \n UO Fechada" },
-        { "data": "12/10/2026", "tipo": "aberta", "descricao": "Nossa Senhora Aparecida \n UO Aberta" },
-        { "data": "13/10/2026", "tipo": "fechada", "descricao": "Nossa Senhora Aparecida \n UO Fechada" },
-        { "data": "02/11/2026", "tipo": "aberta", "descricao": "Finados \n UO Aberta" },
-        { "data": "03/11/2026", "tipo": "fechada", "descricao": "Finados \n UO Fechada" },
-        { "data": "20/11/2026", "tipo": "aberta", "descricao": "Consciência Negra \n UO Aberta" },
+        { "data": "07/09/2026", "tipo": "aberta", "descricao": "Independência do Brasil" },
+        { "data": "08/09/2026", "tipo": "fechada", "descricao": "Independência do Brasil" },
+        { "data": "12/10/2026", "tipo": "aberta", "descricao": "Nossa Senhora Aparecida" },
+        { "data": "13/10/2026", "tipo": "fechada", "descricao": "Nossa Senhora Aparecida" },
+        { "data": "02/11/2026", "tipo": "aberta", "descricao": "Finados" },
+        { "data": "03/11/2026", "tipo": "fechada", "descricao": "Finados" },
+        { "data": "20/11/2026", "tipo": "aberta", "descricao": "Consciência Negra" },
 
-        { "data": "08/02/2027", "tipo": "aberta", "descricao": "Carnaval \n UO Aberta" },
-        { "data": "09/02/2027", "tipo": "aberta", "descricao": "Carnaval \n UO Aberta" },
-        { "data": "10/02/2027", "tipo": "fechada", "descricao": "Cinzas \n UO Fechada" },
-        { "data": "21/04/2027", "tipo": "aberta", "descricao": "Tiradentes \n UO Aberta" },
-        { "data": "27/05/2027", "tipo": "aberta", "descricao": "Corpus Christi \n UO Aberta" },
-        { "data": "09/07/2027", "tipo": "aberta", "descricao": "Revolução Constitucionalista \n UO Aberta" },
-        { "data": "07/09/2027", "tipo": "aberta", "descricao": "Independência \n UO Aberta" },
-        { "data": "12/10/2027", "tipo": "aberta", "descricao": "Nossa Senhora \n UO Aberta" },
-        { "data": "02/11/2027", "tipo": "aberta", "descricao": "Finados \n UO Aberta" },
-        { "data": "15/11/2027", "tipo": "aberta", "descricao": "República \n UO Aberta" },
-        { "data": "16/11/2027", "tipo": "fechada", "descricao": "República \n UO Aberta" }
+        { "data": "08/02/2027", "tipo": "aberta", "descricao": "Carnaval" },
+        { "data": "09/02/2027", "tipo": "aberta", "descricao": "Carnaval" },
+        { "data": "10/02/2027", "tipo": "fechada", "descricao": "Cinzas" },
+        { "data": "21/04/2027", "tipo": "aberta", "descricao": "Tiradentes" },
+        { "data": "27/05/2027", "tipo": "aberta", "descricao": "Corpus Christi" },
+        { "data": "09/07/2027", "tipo": "aberta", "descricao": "Revolução Constitucionalista" },
+        { "data": "07/09/2027", "tipo": "aberta", "descricao": "Independência" },
+        { "data": "12/10/2027", "tipo": "aberta", "descricao": "Nossa Senhora" },
+        { "data": "02/11/2027", "tipo": "aberta", "descricao": "Finados" },
+        { "data": "15/11/2027", "tipo": "aberta", "descricao": "República" },
+        { "data": "16/11/2027", "tipo": "fechada", "descricao": "República" }
     ];
 
     const CORES = {
@@ -115,10 +115,18 @@
             dayNumber.style.fontWeight = 'bold';
         }
 
+        let legenda = '';
+
         // Adicionar tooltip com a descrição do feriado
-        cell.setAttribute('title', feriado.descricao);
+        if (feriado.tipo === 'fechada') {
+            legenda = feriado.descricao + ' \n UO Fechada';
+            }else{
+            legenda = feriado.descricao + ' \n UO Aberta';
+        }
+        cell.setAttribute('title', legenda);
         cell.setAttribute('data-feriado', feriado.tipo);
-        cell.setAttribute('data-feriado-desc', feriado.descricao);
+        cell.setAttribute('data-feriado-desc', legenda);
+
 
         // Adicionar classe para identificação
         cell.classList.add('feriado-pintado');
