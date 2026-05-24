@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SIPLAN - Pintar Feriados no Calendário
 // @namespace    http://tampermonkey.net/
-// @version      1.3.1
+// @version      1.3.2
 // @description  Pinta as células do calendário SIPLAN com base nos feriados
 // @match        http://webapps.sorocaba.sescsp.org.br/siplan/*
 // @match        https://webapps.sorocaba.sescsp.org.br/siplan/*
@@ -15,6 +15,10 @@
 
     // Feriados embutidos diretamente no script (evita problemas de rede)
     const FERIADOS = [
+        { "data": "2026-06-04", "tipo": "aberta", "descricao": "Corpus Christi \n UO Aberta" },
+        { "data": "2026-07-09", "tipo": "aberta", "descricao": "Revolução Constitucionalista \n UO Aberta" },        
+        { "data": "2026-15-08", "tipo": "aberta", "descricao": "Aniversário de Sorocaba \n UO Aberta" },
+        
         { "data": "2026-09-07", "tipo": "aberta", "descricao": "Independência do Brasil \n UO Aberta" },
         { "data": "2026-09-08", "tipo": "fechada", "descricao": "Independência do Brasil \n UO Fechada" },
         { "data": "2026-10-12", "tipo": "aberta", "descricao": "Nossa Senhora Aparecida \n UO Aberta" },
