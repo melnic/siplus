@@ -1,6 +1,6 @@
 # Links para funionalidades:
-**Design Simpligicado**
-Torna a interface mais enxuta, com mais espaços para dados:  
+**Design Simpligicado**  
+Torna a interface mais enxuta, com mais espaços para dados:
 [Design Simplificado](https://github.com/melnic/siplus/raw/refs/heads/master/redesign.user.js)
 
 **Scan de Conflitos**  
