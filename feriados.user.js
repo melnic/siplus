@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SIPLAN - Pintar Feriados no Calendário
 // @namespace    http://tampermonkey.net/
-// @version      1.4.1
+// @version      1.4.2
 // @description  Pinta as células do calendário SIPLAN com base nos feriados
 // @match        http://webapps.sorocaba.sescsp.org.br/siplan/*
 // @match        https://webapps.sorocaba.sescsp.org.br/siplan/*
@@ -25,6 +25,7 @@
         { "data": "13/10/2026", "tipo": "fechada", "descricao": "Nossa Senhora Aparecida" },
         { "data": "02/11/2026", "tipo": "aberta", "descricao": "Finados" },
         { "data": "03/11/2026", "tipo": "fechada", "descricao": "Finados" },
+        { "data": "15/11/2026", "tipo": "aberta", "descricao": "Proclamação da República" },
         { "data": "20/11/2026", "tipo": "aberta", "descricao": "Consciência Negra" },
 
         { "data": "08/02/2027", "tipo": "aberta", "descricao": "Carnaval" },
@@ -33,6 +34,7 @@
         { "data": "21/04/2027", "tipo": "aberta", "descricao": "Tiradentes" },
         { "data": "27/05/2027", "tipo": "aberta", "descricao": "Corpus Christi" },
         { "data": "09/07/2027", "tipo": "aberta", "descricao": "Revolução Constitucionalista" },
+        { "data": "15/08/2027", "tipo": "aberta", "descricao": "Aniversário de Sorocaba" },
         { "data": "07/09/2027", "tipo": "aberta", "descricao": "Independência" },
         { "data": "12/10/2027", "tipo": "aberta", "descricao": "Nossa Senhora" },
         { "data": "02/11/2027", "tipo": "aberta", "descricao": "Finados" },
