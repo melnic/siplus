@@ -23,6 +23,9 @@ Remove a janela de confirmação de aprovação, agilizando trabalho.
 Destaca nos calendários semanal e mensal os dias em que a unidade está aberta ou fechada.  
 [Destacador de feriados](https://github.com/melnic/siplus/raw/refs/heads/master/feriados.user.js)
 
+**Menu de Meses**  
+Adiciona menu com 4 meses futuros no Siplan, agilizando a seleção de períodos.  
+[Menu de Meses](https://github.com/melnic/siplus/raw/refs/heads/master/menu_meses.user.js)
 
 
 # siplus
