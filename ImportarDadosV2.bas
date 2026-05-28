@@ -1,194 +1,228 @@
-Attribute VB_Name = "NewMacros"
 Public Sub FromClipboard()
-
-'Dim clipboard As DataObject
-Dim texto As String
-
-'Set clipboard = New DataObject
-'clipboard.GetFromClipboard
-'texto = clipboard.GetText
-
-'Modelo 2 de texto do clipboard
-Dim dataObj As New MSForms.DataObject
+    On Error GoTo ErrorHandler
     
-        dataObj.GetFromClipboard
-        texto = dataObj.GetText()
-        On Error GoTo 0
-        Debug.Print ("Text saved from Clipboard: '" & strText & "'")
+    Dim texto As String
+    Dim dataObj As New MSForms.DataObject
+    
+    ' Obter texto do clipboard
+    dataObj.GetFromClipboard
+    texto = dataObj.GetText()
+    Debug.Print "Text saved from Clipboard: '" & texto & "'"
+    
+    ' Parse dos dados
+    Dim titulo As String
+    Dim contratado As String
+    Dim datas As String
+    Dim total As String
+    Dim parcelas As String
+    
+    Call ParseClipboardData(texto, titulo, contratado, datas, total, parcelas)
+    
+    ' Obter formato selecionado
+    Dim formato As String
+    formato = GetFormatoSelecionado()
+    If formato = "" Then Exit Sub
+    
+    ' Configurar documento
+    Call ConfigurarDocumento(formato, titulo, contratado, datas, total, parcelas)
+    
+    Exit Sub
+    
+ErrorHandler:
+    MsgBox "Erro " & Err.Number & ": " & Err.Description, vbCritical, "Erro"
+End Sub
 
-' dividir texto em pares variável-valor separados por "|"
-Dim pares As Variant
-pares = Split(texto, "|")
-
-' percorrer cada par variável-valor e atribuir valores às variáveis correspondentes
-' [titulo, contratado, datas, total, parcelas]
-Dim titulo As String
-Dim contratado As String
-Dim datas As String
-Dim total As String
-Dim parcelas As String
-Dim formato As String
-
-' Variáveis do loop de ocultações
-Dim allDocuments() As String
-Dim oneDocument() As String
-Dim i As Long
-Dim j As Long
-Dim encontrado As Boolean
-
-
-'Faz o parsing dos dados trazidos pela clipboard
-For Each par In pares
+Private Sub ParseClipboardData(texto As String, ByRef titulo As String, ByRef contratado As String, _
+                                ByRef datas As String, ByRef total As String, ByRef parcelas As String)
+    
+    Dim pares As Variant
+    Dim par As Variant
+    Dim partes() As String
     Dim nome As String
     Dim valor As String
-    nome = Split(par, "=")(0) ' extrai o nome da variável do par atual
-    valor = Split(par, "=")(1) ' extrai o valor correspondente do par atual
     
-    Select Case nome
-        Case "titulo"
-            titulo = valor
-        Case "contratado"
-            contratado = valor
-        Case "datas"
-            datas = valor
-        Case "total"
-            total = valor
-        Case "parcelas"
-            parcelas = valor
+    If texto = "" Then Exit Sub
+    
+    pares = Split(texto, "|")
+    
+    For Each par In pares
+        If InStr(par, "=") > 0 Then
+            partes = Split(par, "=")
+            If UBound(partes) >= 1 Then
+                nome = Trim(partes(0))
+                valor = Trim(partes(1))
+                
+                Select Case nome
+                    Case "titulo"
+                        titulo = valor
+                    Case "contratado"
+                        contratado = valor
+                    Case "datas"
+                        datas = valor
+                    Case "total"
+                        total = valor
+                    Case "parcelas"
+                        parcelas = valor
+                End Select
+            End If
+        End If
+    Next par
+End Sub
+
+Private Function GetFormatoSelecionado() As String
+    Const PROMPT As String = "Escolha um tipo de carta:" & vbNewLine & _
+                            "0. PF" & vbNewLine & _
+                            "1. oficina" & vbNewLine & _
+                            "2. dança" & vbNewLine & _
+                            "3. intervencao / narração / esportiva" & vbNewLine & _
+                            "4. musica" & vbNewLine & _
+                            "5. circo" & vbNewLine & _
+                            "6. teatro"
+    
+    Dim result As Variant
+    Dim formatos As Variant
+    
+    formatos = Array("PF", "oficina", "danca", "intervencao", "musica", "circo", "teatro")
+    
+    Do
+        result = InputBox(PROMPT, "Digitar número", "0")
+        If result = "" Then Exit Function
+        
+        If IsNumeric(result) And result >= 0 And result <= 6 Then
+            GetFormatoSelecionado = formatos(CInt(result))
+            Exit Do
+        End If
+        
+        MsgBox "Por favor, digite um número entre 0 e 6.", vbExclamation
+    Loop
+End Function
+
+Private Sub ConfigurarDocumento(formato As String, titulo As String, contratado As String, _
+                                 datas As String, total As String, parcelas As String)
+    
+    ' Configurar textos do formato
+    Call ConfigurarFormatoTexto(formato)
+    
+    ' Apagar bookmarks conforme formato
+    Call ApagarBookmarksPorFormato(formato)
+    
+    ' Inserir dados no cabeçalho
+    Call InserirDadosCabecalho(formato, titulo, contratado, datas, total, parcelas)
+End Sub
+
+Private Sub ConfigurarFormatoTexto(formato As String)
+    Dim textoFormato As String
+    
+    Select Case formato
+        Case "oficina"
+            textoFormato = "oficina de"
+        Case "danca"
+            textoFormato = "apresentação de dança"
+        Case "intervencao"
+            textoFormato = "intervenção"
+        Case "musica"
+            textoFormato = "apresentação de música"
+        Case "circo"
+            textoFormato = "apresentação de circo"
+        Case "teatro"
+            textoFormato = "apresentação de teatro"
+        Case Else
+            Exit Sub
     End Select
-Next
-
-' AJUSTA QUADROS DO DOCUMENTO
-' Outros bookmarks do documento
-' Dados para Pagamento: quadro2_PF, quadro2_PJ
-' Dados contratado: quadro3_PF, quadro3_PJ
-' Dados PJ: quadro_representante_PJ
-' Formato da ação: formato
-' ecad, vinculo, sbat, drt, autoria_danca, seguro, art
-
-allDocuments = Split("ecad, vinculo, sbat, drt, autoria_danca, seguro, art", ", ")
-
-    Dim promptText As String
-    Dim result As Integer
     
-    ' pf, circo, danca, intervencao, musica, oficina, teatro
+    Call SetBookmarkText("formato", textoFormato)
+    Call SetBookmarkText("formato2", textoFormato)
+End Sub
+
+Private Sub ApagarBookmarksPorFormato(formato As String)
+    Dim allDocuments() As String
+    Dim oneDocument() As String
+    Dim i As Long
+    Dim j As Long
+    Dim encontrado As Boolean
     
-    promptText = "Escolha um tipo de carta:" & vbNewLine & "0. PF" & vbNewLine & "1. oficina" & vbNewLine & "2. dança" & vbNewLine & "3. intervencao / narração / esportiva" & vbNewLine & "4. musica" & vbNewLine & "5. circo" & vbNewLine & "6. teatro"
-    result = InputBox(promptText, "Digitar número")
+    ' Todos os documentos possíveis
+    allDocuments = Split("ecad, vinculo, sbat, drt, autoria_danca, seguro, art", ", ")
     
-    Select Case result
-        Case 0
-            formato = "PF"
+    ' Definir quais documentos manter baseado no formato
+    Select Case formato
+        Case "PF"
+            oneDocument = Split("", ",")
+            ' Apagar bookmarks PJ
+            Call SetBookmarkText("quadro2_PJ", "")
+            Call SetBookmarkText("quadro3_PJ", "")
+            Call SetBookmarkText("quadro_representante_PJ", "")
+            Exit Sub  ' PF não precisa do loop abaixo
             
-        Case 1
-            formato = "oficina"
-            ActiveDocument.Bookmarks("formato").Range.Text = "oficina de"
-            ActiveDocument.Bookmarks("formato2").Range.Text = "oficina de"
-        Case 2
-            formato = "danca"
-            ActiveDocument.Bookmarks("formato").Range.Text = "apresentação de dança"
-            ActiveDocument.Bookmarks("formato2").Range.Text = "apresentação de dança"
-        Case 3
-            formato = "intervencao"
-            ActiveDocument.Bookmarks("formato").Range.Text = "intervenção"
-            ActiveDocument.Bookmarks("formato2").Range.Text = "intervenção"
-        Case 4
-            formato = "musica"
-            ActiveDocument.Bookmarks("formato").Range.Text = "apresentação de música"
-            ActiveDocument.Bookmarks("formato2").Range.Text = "apresentação de música"
-        Case 5
-            formato = "circo"
-            ActiveDocument.Bookmarks("formato").Range.Text = "apresentação de circo"
-            ActiveDocument.Bookmarks("formato2").Range.Text = "apresentação de circo"
-        Case 6
-            formato = "teatro"
-            ActiveDocument.Bookmarks("formato").Range.Text = "apresentação de teatro"
-            ActiveDocument.Bookmarks("formato2").Range.Text = "apresentação de teatro"
-
+        Case "circo"
+            oneDocument = Split("ecad,vinculo,drt,seguro,art", ",")
+        Case "danca"
+            oneDocument = Split("ecad,vinculo,drt,autoria_danca", ",")
+        Case "intervencao"
+            oneDocument = Split("ecad,vinculo", ",")
+        Case "musica"
+            oneDocument = Split("ecad,vinculo", ",")
+        Case "oficina"
+            oneDocument = Split("vinculo", ",")
+        Case "teatro"
+            oneDocument = Split("ecad,sbat,vinculo,drt", ",")
+        Case Else
+            Exit Sub
     End Select
-
-Select Case formato
-    Case "PF"
-        oneDocument = Split("", ",")
-        ' APAGAR em vez de ocultar
-        ActiveDocument.Bookmarks("quadro2_PJ").Range.Text = ""
-        ActiveDocument.Bookmarks("quadro3_PJ").Range.Text = ""
-        ActiveDocument.Bookmarks("quadro_representante_PJ").Range.Text = ""
     
-    Case "circo"
-        oneDocument = Split("ecad,vinculo,drt,seguro,art", ",")
-    
-    Case "danca"
-        oneDocument = Split("ecad,vinculo,drt,autoria_danca", ",")
-    
-    Case "intervencao"
-        oneDocument = Split("ecad,vinculo", ",")
-    
-    Case "musica"
-        oneDocument = Split("ecad,vinculo", ",")
-    
-    Case "oficina"
-        oneDocument = Split("vinculo", ",")
-    
-    Case "teatro"
-        oneDocument = Split("ecad,sbat,vinculo,drt", ",")
-
-End Select
-
-' For i = LBound(apagarTrechos) To UBound(apagarTrechos)
-'         ActiveDocument.Bookmarks(apagarTrechos(i)).Range.Text = ""
-'         MsgBox "Apaguei item" & apagarTrechos(i)
-'     Next i
-    
-
-
-' Defina os valores das matrizes 1 e 2
-
-' oneDocument = Split("ecad, vinculo, drt", ",")
-
-' Verifica se os valores da matriz1 não estão presentes na matriz2
-
-If Not formato = "PF" Then
+    ' Apagar documentos que não estão em oneDocument
     For i = LBound(allDocuments) To UBound(allDocuments)
         encontrado = False
         For j = LBound(oneDocument) To UBound(oneDocument)
-            If allDocuments(i) = oneDocument(j) Then
+            If Trim(allDocuments(i)) = Trim(oneDocument(j)) Then
                 encontrado = True
                 Exit For
             End If
         Next j
         If Not encontrado Then
-            ' APAGAR em vez de ocultar
-            ActiveDocument.Bookmarks(allDocuments(i)).Range.Text = ""
+            Call SetBookmarkText(Trim(allDocuments(i)), "")
         End If
     Next i
-    ' APAGAR em vez de ocultar
-    ActiveDocument.Bookmarks("quadro2_PF").Range.Text = ""
-    ActiveDocument.Bookmarks("quadro3_PF").Range.Text = ""
-End If
+    
+    ' Apagar bookmarks PF
+    Call SetBookmarkText("quadro2_PF", "")
+    Call SetBookmarkText("quadro3_PF", "")
+End Sub
 
-' Insere dados da ação puxados do Siplan e copiados no Clipboard
-' Inserir dados no cabeçalho da carta proposta
-
-    If Not formato = "musica" Then
-        ActiveDocument.Bookmarks("titulo_acao").Range.Text = titulo
-        ActiveDocument.Bookmarks("contratado").Range.Text = contratado
+Private Sub InserirDadosCabecalho(formato As String, titulo As String, contratado As String, _
+                                   datas As String, total As String, parcelas As String)
+    
+    ' Inserir dados da ação
+    If formato <> "musica" Then
+        Call SetBookmarkText("titulo_acao", titulo)
+        Call SetBookmarkText("contratado", contratado)
     Else
-        ActiveDocument.Bookmarks("titulo_acao").Range.Text = contratado
-        ActiveDocument.Bookmarks("contratado").Range.Text = titulo
-        ActiveDocument.Bookmarks("hifen").Range.Text = " - "
+        Call SetBookmarkText("titulo_acao", contratado)
+        Call SetBookmarkText("contratado", titulo)
+        Call SetBookmarkText("hifen", " - ")
     End If
     
-    ActiveDocument.Bookmarks("horarios").Range.Text = datas
-    ActiveDocument.Bookmarks("total").Range.Text = total
-    ActiveDocument.Bookmarks("parcelas").Range.Text = parcelas
+    ' Inserir outros dados
+    Call SetBookmarkText("horarios", datas)
+    Call SetBookmarkText("total", total)
+    Call SetBookmarkText("parcelas", parcelas)
     
-    ' Insere dados da Declaração de Vínculo
-    ActiveDocument.Bookmarks("titulo_vinculo").Range.Text = titulo
-    ActiveDocument.Bookmarks("datas_vinculo").Range.Text = datas
+    ' Dados da declaração de vínculo
+    Call SetBookmarkText("titulo_vinculo", titulo)
+    Call SetBookmarkText("datas_vinculo", datas)
     
+    ' Remover introdução de parcelas se não houver parcelas
     If parcelas = "" Then
-        ActiveDocument.Bookmarks("intro_parcelas").Range.Text = ""
+        Call SetBookmarkText("intro_parcelas", "")
     End If
+End Sub
 
+Private Sub SetBookmarkText(bookmarkName As String, textValue As String)
+    On Error Resume Next
+    If ActiveDocument.Bookmarks.Exists(bookmarkName) Then
+        ActiveDocument.Bookmarks(bookmarkName).Range.Text = textValue
+    Else
+        Debug.Print "Bookmark não encontrado: " & bookmarkName
+    End If
+    On Error GoTo 0
 End Sub
