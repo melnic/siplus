@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SIPLAN - Pintar Feriados no Calendário
 // @namespace    http://tampermonkey.net/
-// @version      1.4.3
+// @version      1.4.4
 // @description  Pinta as células do calendário SIPLAN com base nos feriados
 // @match        http://webapps.sorocaba.sescsp.org.br/siplan/*
 // @match        https://webapps.sorocaba.sescsp.org.br/siplan/*
@@ -26,6 +26,10 @@
 
         { "data": "07/09/2026", "tipo": "aberta", "descricao": "Independência do Brasil" },
         { "data": "08/09/2026", "tipo": "fechada", "descricao": "Independência do Brasil" },
+
+        { "data": "04/10/2026", "tipo": "fechada", "descricao": "Primeiro Turno" },
+        { "data": "25/10/2026", "tipo": "fechada", "descricao": "Fecha se tiver segundo turno" },
+        
         { "data": "12/10/2026", "tipo": "aberta", "descricao": "Nossa Senhora Aparecida" },
         { "data": "13/10/2026", "tipo": "fechada", "descricao": "Nossa Senhora Aparecida" },
         { "data": "02/11/2026", "tipo": "aberta", "descricao": "Finados" },
