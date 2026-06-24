@@ -28,6 +28,10 @@ Adiciona menu com 4 meses futuros no Siplan, agilizando a seleção de períodos
 [Menu de Meses](https://github.com/melnic/siplus/raw/refs/heads/master/menu_meses.user.js)
 
 
+**PCAPer**
+Facilidades para preenchimento de PCAP.
+[PCAPer](https://github.com/melnic/siplus/raw/refs/heads/master/pcaper.user.js)
+
 # siplus
 Adiciona funcionalidades e praticidades ao sistema interno
 
