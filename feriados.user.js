@@ -1,275 +1,164 @@
 // ==UserScript==
-// @name         SIPLAN - Pintar Feriados no Calendário
+// @name         SESC Sorocaba - Botões Meses Atual e Futuros
 // @namespace    http://tampermonkey.net/
-// @version      1.4.4
-// @description  Pinta as células do calendário SIPLAN com base nos feriados
+// @version      1.4
+// @description  Adiciona botões para o mês atual e próximos 4 meses no calendário do SESC Sorocaba
+// @author       Você
 // @match        http://webapps.sorocaba.sescsp.org.br/siplan/*
-// @match        https://webapps.sorocaba.sescsp.org.br/siplan/*
-// @downloadURL https://github.com/melnic/siplus/raw/refs/heads/master/feriados.user.js
-// @updateURL   https://github.com/melnic/siplus/raw/refs/heads/master/feriados.user.js
-// @run-at       document-end
+// @downloadURL https://github.com/melnic/siplus/raw/refs/heads/master/menu_meses.user.js
+// @updateURL   https://github.com/melnic/siplus/raw/refs/heads/master/menu_meses.user.js
+// @grant        none
 // ==/UserScript==
 
 (function() {
     'use strict';
 
-    // Feriados no formato brasileiro (DD/MM/AAAA)
-    const FERIADOS = [
-        { "data": "04/06/2026", "tipo": "aberta", "descricao": "Corpus Christi" },
+    // Adiciona CSS para reduzir a largura dos selects
+    const style = document.createElement('style');
+    style.textContent = `
+        #select-month {
+            width: 100px !important;
+            max-width: 100px !important;
+        }
+        #select-year {
+            width: 70px !important;
+            max-width: 70px !important;
+        }
+        #select-month-container {
+            display: inline-flex !important;
+            gap: 5px !important;
+            align-items: center !important;
+        }
+        .btn-mes-rapido.atual {
+            font-weight: bold;
+            background-color: #f0f0f0;
+            border: 2px solid #ccc;
+        }
+    `;
+    document.head.appendChild(style);
 
-        { "data": "13/06/2026", "tipo": "aberta", "descricao": "Jogo Brasil: 19h" },
-        { "data": "19/06/2026", "tipo": "aberta", "descricao": "Jogo Brasil: 21h30. Unidade Fecha 19h" },
-        { "data": "24/06/2026", "tipo": "aberta", "descricao": "Jogo Brasil: 19h" },
-        
-        { "data": "09/07/2026", "tipo": "aberta", "descricao": "Revolução Constitucionalista" },
-        { "data": "15/08/2026", "tipo": "aberta", "descricao": "Aniversário de Sorocaba" },
-
-        { "data": "07/09/2026", "tipo": "aberta", "descricao": "Independência do Brasil" },
-        { "data": "08/09/2026", "tipo": "fechada", "descricao": "Independência do Brasil" },
-
-        { "data": "04/10/2026", "tipo": "fechada", "descricao": "Primeiro Turno" },
-        { "data": "25/10/2026", "tipo": "fechada", "descricao": "Fecha se tiver segundo turno" },
-        
-        { "data": "12/10/2026", "tipo": "aberta", "descricao": "Nossa Senhora Aparecida" },
-        { "data": "13/10/2026", "tipo": "fechada", "descricao": "Nossa Senhora Aparecida" },
-        { "data": "02/11/2026", "tipo": "aberta", "descricao": "Finados" },
-        { "data": "03/11/2026", "tipo": "fechada", "descricao": "Finados" },
-        { "data": "15/11/2026", "tipo": "aberta", "descricao": "Proclamação da República" },
-        { "data": "20/11/2026", "tipo": "aberta", "descricao": "Consciência Negra" },
-
-        { "data": "08/02/2027", "tipo": "aberta", "descricao": "Carnaval" },
-        { "data": "09/02/2027", "tipo": "aberta", "descricao": "Carnaval" },
-        { "data": "10/02/2027", "tipo": "fechada", "descricao": "Cinzas" },
-        { "data": "21/04/2027", "tipo": "aberta", "descricao": "Tiradentes" },
-        { "data": "27/05/2027", "tipo": "aberta", "descricao": "Corpus Christi" },
-        { "data": "09/07/2027", "tipo": "aberta", "descricao": "Revolução Constitucionalista" },
-        { "data": "15/08/2027", "tipo": "aberta", "descricao": "Aniversário de Sorocaba" },
-        { "data": "07/09/2027", "tipo": "aberta", "descricao": "Independência" },
-        { "data": "12/10/2027", "tipo": "aberta", "descricao": "Nossa Senhora" },
-        { "data": "02/11/2027", "tipo": "aberta", "descricao": "Finados" },
-        { "data": "15/11/2027", "tipo": "aberta", "descricao": "República" },
-        { "data": "16/11/2027", "tipo": "fechada", "descricao": "República" }
+    const MESES = [
+        'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+        'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
     ];
 
-    const CORES = {
-        'fechada': {
-            backgroundColor: '#555555',      // Cinza claro
-            borderColor: '#757575',          // Cinza médio
-            titleColor: '#424242'            // Cinza escuro
-        },
-        'aberta': {
-            backgroundColor: '#e0f7fa',      // Azul água bem claro
-            borderColor: '#00acc1',          // Azul ciano
-            titleColor: '#006064'            // Azul petróleo escuro
-        }
-    };
+    function calcularMesAno(offset) {
+        const dataAtual = new Date();
+        const mesAtual = dataAtual.getMonth(); // 0-11
+        const anoAtual = dataAtual.getFullYear();
 
-    // Função para converter data do formato brasileiro (DD/MM/AAAA) para ISO (AAAA-MM-DD)
-    function converterDataParaISO(dataBR) {
-        if (!dataBR) return null;
+        let novoMes = mesAtual + offset;
+        let novoAno = anoAtual;
 
-        // Verifica se já está no formato ISO
-        if (dataBR.match(/^\d{4}-\d{2}-\d{2}$/)) {
-            return dataBR;
+        if (novoMes >= 12) {
+            novoAno += Math.floor(novoMes / 12);
+            novoMes = novoMes % 12;
         }
 
-        // Converte de DD/MM/AAAA para AAAA-MM-DD
-        const partes = dataBR.split('/');
-        if (partes.length === 3) {
-            const dia = partes[0].padStart(2, '0');
-            const mes = partes[1].padStart(2, '0');
-            const ano = partes[2];
-            return `${ano}-${mes}-${dia}`;
-        }
-
-        return dataBR;
+        return { mes: MESES[novoMes], ano: novoAno };
     }
 
-    // Função para converter data do formato ISO para brasileiro (para debug)
-    function converterDataParaBR(dataISO) {
-        if (!dataISO) return null;
-        const partes = dataISO.split('-');
-        if (partes.length === 3) {
-            return `${partes[2]}/${partes[1]}/${partes[0]}`;
-        }
-        return dataISO;
+    function getNomeMesSistema(offset) {
+        return calcularMesAno(offset).mes.substring(0, 3);
     }
 
-    // Pré-converte as datas dos feriados para ISO (mantém o original para referência)
-    const FERIADOS_ISO = FERIADOS.map(feriado => ({
-        ...feriado,
-        dataISO: converterDataParaISO(feriado.data),
-        dataOriginal: feriado.data  // Mantém o formato original para debug
-    }));
+    function navegarParaMesSistema(offset) {
+        const selectMes = document.querySelector('#select-month');
+        const selectAno = document.querySelector('#select-year');
 
-    // Função para obter feriado de uma data específica (agora a data do calendário está em ISO)
-    function obterFeriado(dataISO) {
-        const feriado = FERIADOS_ISO.find(f => f.dataISO === dataISO);
-        return feriado;
-    }
-
-    // Função para pintar uma célula
-    function pintarCelula(cell, feriado) {
-        if (!feriado) return;
-
-        const cor = CORES[feriado.tipo];
-        if (!cor) return;
-
-        // Aplicar estilos
-        cell.style.backgroundColor = cor.backgroundColor;
-        cell.style.border = `1px solid ${cor.borderColor}`;
-
-        // Pintar o número do dia
-        const dayNumber = cell.querySelector('.fc-day-number');
-        if (dayNumber) {
-            dayNumber.style.color = cor.titleColor;
-            dayNumber.style.fontWeight = 'bold';
+        if (!selectMes || !selectAno) {
+            console.error('[SESC botões] Elementos de seleção não encontrados ao navegar');
+            return;
         }
 
-        let legenda = '';
+        const { mes, ano } = calcularMesAno(offset);
 
-        // Adicionar tooltip com a descrição do feriado
-        if (feriado.tipo === 'fechada') {
-            legenda = feriado.descricao + ' \n UO Fechada';
-            }else{
-            legenda = feriado.descricao + ' \n UO Aberta';
-        }
-        cell.setAttribute('title', legenda);
-        cell.setAttribute('data-feriado', feriado.tipo);
-        cell.setAttribute('data-feriado-desc', legenda);
+        selectMes.value = mes;
+        selectAno.value = ano.toString();
 
+        selectMes.dispatchEvent(new Event('change', { bubbles: true }));
+        selectAno.dispatchEvent(new Event('change', { bubbles: true }));
 
-        // Adicionar classe para identificação
-        cell.classList.add('feriado-pintado');
-        cell.classList.add(`feriado-${feriado.tipo}`);
-
-        // Se for feriado fechada, adicionar ícone de cadeado
-        if (feriado.tipo === 'fechada') {
-            if (dayNumber && !dayNumber.querySelector('.lock')) {
-                const lockIcon = document.createElement('span');
-                lockIcon.className = 'lock';
-                lockIcon.textContent = ' 🔒';
-                lockIcon.style.fontSize = '11px';
-                lockIcon.style.marginLeft = '4px';
-                lockIcon.title = 'Unidade fechada';
-                dayNumber.appendChild(lockIcon);
-            }
-        }
+        console.log(`[SESC botões] Navegando para: ${mes} ${ano}`);
     }
 
-    // Função principal para processar todas as células
-    function processarCelulas() {
-        const cells = document.querySelectorAll('td[data-date]');
-        let count = 0;
+    function criarBotoesContainer() {
+        const botoesContainer = document.createElement('div');
+        botoesContainer.id = 'botoes-meses-container';
+        botoesContainer.style.display = 'inline-block';
+        botoesContainer.style.marginLeft = '5px';
+        botoesContainer.style.verticalAlign = 'middle';
 
-        cells.forEach(cell => {
-            const dataISO = cell.getAttribute('data-date');
-            const feriado = obterFeriado(dataISO);
-            if (feriado) {
-                pintarCelula(cell, feriado);
-                count++;
-            }
-        });
+        for (let i = 0; i <= 4; i++) {
+            const botao = document.createElement('button');
+            botao.type = 'button';
+            botao.className = i === 0 ? 'btn btn-mes-rapido atual' : 'btn btn-mes-rapido';
+            botao.style.padding = '4px 8px';
+            botao.style.fontSize = '12px';
+            botao.dataset.mesOffset = i;
+            botao.textContent = getNomeMesSistema(i);
 
-        if (count > 0) {
-            console.log(`[SIPLAN Feriados] ${count} células pintadas com feriados`);
+            botao.addEventListener('click', function() {
+                navegarParaMesSistema(parseInt(this.dataset.mesOffset, 10));
+            });
 
-            // Debug: Mostrar os feriados do mês atual (opcional)
-            if (count > 0 && cells.length > 0) {
-                const primeiroDia = cells[0].getAttribute('data-date');
-                if (primeiroDia) {
-                    const mesAno = primeiroDia.substring(0, 7);
-                    const feriadosMes = FERIADOS_ISO.filter(f => f.dataISO.startsWith(mesAno));
-                    if (feriadosMes.length > 0) {
-                        console.log(`[SIPLAN Feriados] Feriados em ${mesAno}:`,
-                            feriadosMes.map(f => `${converterDataParaBR(f.dataISO)} (${f.tipo})`).join(', '));
-                    }
-                }
-            }
+            botoesContainer.appendChild(botao);
         }
+
+        return botoesContainer;
     }
 
-    // Função para adicionar estilos CSS
-    function adicionarEstilos() {
-        const style = document.createElement('style');
-        style.textContent = `
-            .feriado-pintado {
-                transition: background-color 0.2s;
-            }
-            .feriado-pintado:hover {
-                filter: brightness(0.95);
-                cursor: help;
-            }
-            .feriado-fechada {
-                background-color: ${CORES.fechada.backgroundColor} !important;
-            }
-            .feriado-aberta {
-                background-color: ${CORES.aberta.backgroundColor} !important;
-            }
-            .lock {
-                display: inline-block;
-            }
-        `;
-        document.head.appendChild(style);
+    // Tenta inserir os botões. Retorna true se inseriu (ou já estava presente e válido).
+    function tentarInserirBotoes() {
+        const container = document.querySelector('#select-month-container');
+        if (!container) {
+            return false;
+        }
+
+        const existente = document.querySelector('#botoes-meses-container');
+
+        // Já está inserido e ainda conectado ao DOM atual: nada a fazer.
+        if (existente && existente.isConnected) {
+            return true;
+        }
+
+        // Existe um container "fantasma" (desconectado, ex: header recriado pelo
+        // Angular): remove a referência velha antes de inserir a nova.
+        if (existente && !existente.isConnected) {
+            existente.remove();
+        }
+
+        const botoesContainer = criarBotoesContainer();
+        container.parentNode.insertBefore(botoesContainer, container.nextSibling);
+        console.log('[SESC botões] Botões dos meses adicionados com sucesso!');
+        return true;
     }
 
-    // MutationObserver para detectar mudanças no DOM
-    function observarMudancas() {
-        const observer = new MutationObserver((mutations) => {
-            let deveProcessar = false;
+    // --- Estratégia principal: MutationObserver ---
+    // Em vez de confiar em 'load' + setTimeout (que falha se o Angular
+    // monta/desmonta o cabeçalho do calendário depois do carregamento da
+    // página, ou se o script corre antes do container existir), observamos
+    // mudanças no DOM e tentamos inserir os botões sempre que for relevante.
+    // Isso também recupera os botões automaticamente se o container for
+    // recriado (ex: ao trocar de view/mês via Angular).
+    const observer = new MutationObserver(() => {
+        tentarInserirBotoes();
+    });
 
-            for (const mutation of mutations) {
-                if (mutation.type === 'childList') {
-                    for (const node of mutation.addedNodes) {
-                        if (node.nodeType === Node.ELEMENT_NODE) {
-                            if ((node.matches && node.matches('td[data-date]')) ||
-                                (node.querySelector && node.querySelector('td[data-date]'))) {
-                                deveProcessar = true;
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (deveProcessar) {
-                setTimeout(processarCelulas, 100);
-            }
-        });
-
+    function iniciarObserver() {
         observer.observe(document.body, {
             childList: true,
             subtree: true
         });
 
-        return observer;
+        // Tenta uma vez de imediato, caso o container já exista.
+        tentarInserirBotoes();
     }
 
-    // Inicialização
-    function init() {
-        adicionarEstilos();
-        processarCelulas();
-        observarMudancas();
-
-        // Eventos para quando o calendário mudar de mês
-        const btnPrev = document.getElementById('btn-prev');
-        const btnNext = document.getElementById('btn-next');
-        const selectMes = document.getElementById('select-month');
-        const selectAno = document.getElementById('select-year');
-
-        if (btnPrev) btnPrev.addEventListener('click', () => setTimeout(processarCelulas, 300));
-        if (btnNext) btnNext.addEventListener('click', () => setTimeout(processarCelulas, 300));
-        if (selectMes) selectMes.addEventListener('change', () => setTimeout(processarCelulas, 300));
-        if (selectAno) selectAno.addEventListener('change', () => setTimeout(processarCelulas, 300));
-
-        console.log('[SIPLAN Feriados] User script inicializado com sucesso!');
-        console.log('[SIPLAN Feriados] Usando formato de data brasileiro (DD/MM/AAAA)');
-    }
-
-    // Aguardar o DOM estar completamente carregado
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
+    if (document.body) {
+        iniciarObserver();
     } else {
-        init();
+        // Body ainda não existe (script rodando muito cedo, ex: @run-at document-start)
+        document.addEventListener('DOMContentLoaded', iniciarObserver);
     }
 })();
