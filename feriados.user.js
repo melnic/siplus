@@ -17,10 +17,12 @@
     const FERIADOS = [
         { "data": "04/06/2026", "tipo": "aberta", "descricao": "Corpus Christi" },
 
+        //Chaves
         { "data": "13/06/2026", "tipo": "aberta", "descricao": "Jogo Brasil: 19h" },
         { "data": "19/06/2026", "tipo": "aberta", "descricao": "Jogo Brasil: 21h30. Unidade Fecha 19h" },
         { "data": "24/06/2026", "tipo": "aberta", "descricao": "Jogo Brasil: 19h" },
 
+        //Mata-mata
         { "data": "29/06/2026", "tipo": "fechada", "descricao": "Jogo Brasil: 14h" },
         { "data": "05/07/2026", "tipo": "aberta", "descricao": "Oitavas de Final: 17h" },
         { "data": "11/07/2026", "tipo": "aberta", "descricao": "Quartas de Final: 18h" },
