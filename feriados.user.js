@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SIPLAN - Pintar Feriados no Calendário
 // @namespace    http://tampermonkey.net/
-// @version      1.4.4
+// @version      1.4.5
 // @description  Pinta as células do calendário SIPLAN com base nos feriados
 // @match        http://webapps.sorocaba.sescsp.org.br/siplan/*
 // @match        https://webapps.sorocaba.sescsp.org.br/siplan/*
@@ -20,6 +20,12 @@
         { "data": "13/06/2026", "tipo": "aberta", "descricao": "Jogo Brasil: 19h" },
         { "data": "19/06/2026", "tipo": "aberta", "descricao": "Jogo Brasil: 21h30. Unidade Fecha 19h" },
         { "data": "24/06/2026", "tipo": "aberta", "descricao": "Jogo Brasil: 19h" },
+
+        { "data": "29/06/2026", "tipo": "fechada", "descricao": "Jogo Brasil: 14h" },
+        { "data": "05/07/2026", "tipo": "aberta", "descricao": "Oitavas de Final: 17h" },
+        { "data": "11/07/2026", "tipo": "aberta", "descricao": "Quartas de Final: 18h" },
+        { "data": "15/07/2026", "tipo": "aberta", "descricao": "Semifinal: 16h" },
+        { "data": "19/07/2026", "tipo": "aberta", "descricao": "Final: 16h" },
         
         { "data": "09/07/2026", "tipo": "aberta", "descricao": "Revolução Constitucionalista" },
         { "data": "15/08/2026", "tipo": "aberta", "descricao": "Aniversário de Sorocaba" },
